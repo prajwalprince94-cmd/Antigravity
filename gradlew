@@ -152,4 +152,4 @@ set -- "$JAVACMD" \
   org.gradle.wrapper.GradleWrapperMain \
   "$@"
 
-eval "exec $APP_ARGS"
+exec "$@"
