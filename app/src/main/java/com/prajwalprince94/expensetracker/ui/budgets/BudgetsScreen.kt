@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -232,7 +232,7 @@ fun BudgetsScreen(
         }
 
         // 4. Budget Items with Range GlassCard & Edit Action
-        itemsIndexed(budgetItems) { index, budget ->
+        items(budgetItems) { budget ->
             val isOver = budget.isOverBudget
             val progressColor = if (isOver) ExpenseRed else if (budget.progress > 0.8f) Color(0xFFFF9800) else IncomeGreen
 
@@ -241,8 +241,7 @@ fun BudgetsScreen(
                     .fillMaxWidth()
                     .bouncyClickable(scaleDown = 0.96f) {
                         editingBudget = budget
-                    }
-                    .entrance(3 + index),
+                    },
                 contentPadding = 16.dp
             ) {
                 Row(

@@ -33,15 +33,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
+import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedDark
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
-import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
-import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenLight
-import com.prajwalprince94.expensetracker.ui.theme.TransferBlue
-import com.prajwalprince94.expensetracker.ui.theme.TransferBlueLight
+import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
+import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,17 +52,9 @@ fun TransactionDetailSheet(
     onDismiss: () -> Unit,
     onDelete: (String) -> Unit
 ) {
-    val tintColor = when (transaction.type) {
-        TransactionType.EXPENSE -> ExpenseRed
-        TransactionType.INCOME -> IncomeGreen
-        TransactionType.TRANSFER -> TransferBlue
-    }
-
-    val bgColor = when (transaction.type) {
-        TransactionType.EXPENSE -> ExpenseRedLight
-        TransactionType.INCOME -> IncomeGreenLight
-        TransactionType.TRANSFER -> TransferBlueLight
-    }
+    val isDark = isSystemInDarkTheme()
+    val tintColor = getFinancialColor(transaction.type, isDark)
+    val bgColor = getFinancialContainerColor(transaction.type, isDark)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -142,6 +135,10 @@ fun TransactionDetailSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            val deleteBtnColor = if (isDark) ExpenseRedDark else ExpenseRed
+            val deleteBtnBg = if (isDark) ExpenseRed.copy(alpha = 0.16f) else ExpenseRedLight
+            val deleteBtnBorder = if (isDark) ExpenseRed.copy(alpha = 0.40f) else ExpenseRed.copy(alpha = 0.30f)
+
             // Action: Delete Transaction with Stride Bouncy Press
             Surface(
                 modifier = Modifier
@@ -152,8 +149,8 @@ fun TransactionDetailSheet(
                         onDismiss()
                     },
                 shape = RoundedCornerShape(18.dp),
-                color = ExpenseRedLight.copy(alpha = 0.25f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, ExpenseRed.copy(alpha = 0.5f))
+                color = deleteBtnBg,
+                border = BorderStroke(1.dp, deleteBtnBorder)
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
@@ -164,13 +161,13 @@ fun TransactionDetailSheet(
                         Icons.Default.Delete,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
-                        tint = ExpenseRed
+                        tint = deleteBtnColor
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Delete Transaction",
                         fontWeight = FontWeight.Bold,
-                        color = ExpenseRed
+                        color = deleteBtnColor
                     )
                 }
             }

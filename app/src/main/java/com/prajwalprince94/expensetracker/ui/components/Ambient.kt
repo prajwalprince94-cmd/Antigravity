@@ -9,7 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 
@@ -17,19 +17,19 @@ import androidx.compose.runtime.staticCompositionLocalOf
 val LocalReduceMotion = staticCompositionLocalOf { false }
 
 /**
- * Ambient background art doesn't need 60 fps.
- *
- * Quantizes ambient animation phase to [steps] times per cycle,
- * so the canvas redraws that often and no more, saving battery and GPU load.
+ * Ambient background animation phase with phase deferral.
+ * Returns a [State<Float>] intended to be read exclusively in the Draw phase
+ * (such as [Modifier.drawBehind] or [Modifier.drawWithCache]), completely
+ * avoiding Compose recomposition overhead.
  */
 @Composable
-fun ambientPhase(
+fun rememberAmbientPhase(
     durationMs: Int = 36_000,
     steps: Int = 180,
     label: String = "ambient",
     hold: Float = 0.2f
-): Float {
-    if (LocalReduceMotion.current) return hold
+): State<Float> {
+    if (LocalReduceMotion.current) return remember { mutableFloatStateOf(hold) }
     val transition = rememberInfiniteTransition(label = label)
     val raw: State<Float> = transition.animateFloat(
         initialValue = 0f,
@@ -40,8 +40,7 @@ fun ambientPhase(
         ),
         label = "${label}Raw"
     )
-    val quantized by remember(steps) {
+    return remember(steps) {
         derivedStateOf { (raw.value * steps).toInt() / steps.toFloat() }
     }
-    return quantized
 }

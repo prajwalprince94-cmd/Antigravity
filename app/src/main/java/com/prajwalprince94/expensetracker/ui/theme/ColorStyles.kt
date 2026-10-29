@@ -75,29 +75,42 @@ fun ColorScheme.applyStyle(style: ColorStyle): ColorScheme = when (style) {
         )
 }
 
-/** Pure-black window with near-black surface ladder for AMOLED displays */
+/** Pure-black window with obsidian surface ladder for AMOLED displays */
 fun ColorScheme.applyAmoled(): ColorScheme = copy(
     background = Color.Black,
     surface = Color.Black,
     surfaceContainerLowest = Color.Black,
-    surfaceContainerLow = Color(0xFF0C0C0C),
-    surfaceContainer = Color(0xFF121212),
-    surfaceContainerHigh = Color(0xFF1B1B1B),
-    surfaceContainerHighest = Color(0xFF242424),
-    surfaceVariant = Color(0xFF1E1E1E)
+    surfaceContainerLow = Color(0xFF090D10),
+    surfaceContainer = Color(0xFF12161A),
+    surfaceContainerHigh = Color(0xFF1B2127),
+    surfaceContainerHighest = Color(0xFF252D35),
+    surfaceVariant = Color(0xFF1E252D),
+    onSurface = Color(0xFFF8FAFC),
+    onSurfaceVariant = Color(0xFF94A3B8)
 )
 
-/** Zenith-style remap: tinted soft background with high-contrast popping cards */
+/** Stride & Zenith surface elevation hierarchy */
 fun ColorScheme.expressiveSurfaces(dark: Boolean): ColorScheme =
     if (dark) copy(
-        background = surfaceContainerLowest,
-        surface = surfaceContainerLowest,
-        surfaceContainer = surfaceContainerHigh,
-        surfaceContainerLow = surfaceContainerLow
+        background = Color(0xFF0B0F12),
+        surface = Color(0xFF0B0F12),
+        surfaceContainerLowest = Color(0xFF070A0D),
+        surfaceContainerLow = Color(0xFF101418),
+        surfaceContainer = Color(0xFF161B20),
+        surfaceContainerHigh = Color(0xFF212830),
+        surfaceContainerHighest = Color(0xFF2A3440),
+        onSurface = Color(0xFFF8FAFC),
+        onSurfaceVariant = Color(0xFF94A3B8),
+        outlineVariant = Color(0xFF2D3748)
     ) else copy(
-        background = surfaceContainerLow,
-        surface = surfaceContainerLow,
-        surfaceContainer = Color.White,
+        background = Color(0xFFF4F6F8),
+        surface = Color(0xFFF4F6F8),
+        surfaceContainerLowest = Color.White,
         surfaceContainerLow = Color.White,
-        surfaceContainerHigh = Color.White
+        surfaceContainer = Color.White,
+        surfaceContainerHigh = Color(0xFFE8ECEF),
+        surfaceContainerHighest = Color(0xFFDEE3E7),
+        onSurface = Color(0xFF0F172A),
+        onSurfaceVariant = Color(0xFF475569),
+        outlineVariant = Color(0xFFE2E8F0)
     )

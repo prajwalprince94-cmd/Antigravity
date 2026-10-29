@@ -80,7 +80,13 @@ fun FloatingBottomNavBar(
                         CircleShape
                     )
                 } else {
-                    Modifier
+                    Modifier.border(
+                        BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                        ),
+                        CircleShape
+                    )
                 }
             )
         ) {

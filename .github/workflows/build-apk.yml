@@ -43,21 +43,28 @@ jobs:
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-high-contrast.apk
 
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: "v2.0-masterpiece"
-          name: "Expense Tracker v2.0 (Stride Masterpiece UI/UX, Vyxel Boot, Offline SQLite Vault)"
+          name: "Expense Tracker v2.0 (Stride Masterpiece UI/UX, High-Contrast Obsidian, Zero-Lag)"
           body: |
-            ### 📱 Expense Tracker v2.0 Masterpiece Release
-            - **UI/UX & Navigation (Stride as Core Focus):** Floating pill dock with active tab horizontal spring expansion, icon overshoot pop animation, AMOLED dark surface ladder, and bouncy physical squash tap feedback.
+            ### 📱 Expense Tracker v2.0 Masterpiece Release (High-Contrast & Performance Edition)
+            - **Performance & Zero-Lag (Buttery 60/120 FPS):**
+              - *Draw-Phase Phase Deferral:* `AuroraBackground` ambient animation reads are deferred directly to `drawBehind`, completely eliminating the root-level recomposition loop.
+              - *Non-Allocating List Dissolution:* `Modifier.fadingEdges` replaced GPU offscreen FBO texture churn with direct gradient overlay passes.
+              - *Stutter-Free Lazy Scrolling:* Removed LaunchedEffect item animations and delays inside lazy column items for immediate, fluid scrolling.
+              - *Streamlined Rupee Ticker:* Unified numeric odometer transitions into a single composite transition node.
+            - **High-Contrast Surface Ladder (Stride & Zenith Inspiration):**
+              - *Dark / AMOLED Mode:* Pure white text (`#F8FAFC`) on elevated obsidian (`#161B20`) cards over deep obsidian (`#0B0F12`) / AMOLED black (`#000000`).
+              - *Light Mode:* Deep ink black text (`#0F172A`) on crisp white cards (`#FFFFFF`) over soft cool slate (`#F4F6F8`).
+              - *Semantic Indicators:* Vivid Emerald (`#10B981` / `#34D399`) and Coral (`#EF4444` / `#F87171`) with adaptive high-contrast badges (no muddy clashing pastels).
+            - **UI/UX & Navigation (Stride as Core Focus):** Floating pill dock with active tab horizontal spring expansion, icon overshoot pop animation, and bouncy physical squash tap feedback.
             - **Branded Startup Experience (Vyxel):** Branded `BootSequence` on cold start with pulsating brand mark, progress shimmer, and smooth 400ms crossfade into main app.
-            - **List Dissolution (Vyxel):** `Modifier.fadingEdges(top, bottom)` on all LazyColumns so content dissolves smoothly above navigation bars without harsh cutoffs.
-            - **Living Atmosphere & Scrubbing (Range):** Living `AuroraBackground` ambient color blooms and `BudgetTape` interactive tape-measure ruler dial with tactile feedback.
-            - **100% Working Offline-First SQLite Persistence:** Full ACID database persistence for transactions, category budgets, and preferences surviving device reboots.
-            - **Fixed Touch & Clicks:** Completely eliminated button click collisions for instant, reliable response on every tap.
+            - **100% Offline SQLite Persistence:** Full ACID database persistence for transactions, category budgets, and preferences surviving device reboots.
             - **Typography:** Genuine offline-bundled Poppins font family across all screens.
             
             #### 📥 Download & Install:
@@ -66,6 +73,7 @@ jobs:
           prerelease: false
           files: |
             app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
+            app/build/outputs/apk/debug/ExpenseTracker-high-contrast.apk
             app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

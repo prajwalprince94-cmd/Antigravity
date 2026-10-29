@@ -8,58 +8,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.IntOffset
 import java.util.Locale
 
 /**
- * Odometer-style rolling numerals inspired by NikhilKain/stride.
- * Each character/digit springs vertically when changed, with smooth slide + fade physics.
- */
-@Composable
-fun AnimatedCounter(
-    text: String,
-    style: TextStyle,
-    modifier: Modifier = Modifier,
-    color: Color = LocalContentColor.current
-) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        text.forEachIndexed { index, char ->
-            // Key on distance from right so length changes don't unnecessarily remount everything
-            val slot = text.length - index
-            AnimatedContent(
-                targetState = char,
-                transitionSpec = {
-                    val springSpec = spring<IntOffset>(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    )
-                    (slideInVertically(springSpec) { it } + fadeIn()) togetherWith
-                            (slideOutVertically(springSpec) { -it } + fadeOut())
-                },
-                label = "odometer_slot_$slot"
-            ) { c ->
-                Text(
-                    text = c.toString(),
-                    style = style,
-                    color = color
-                )
-            }
-        }
-    }
-}
-
-/**
- * Animated Indian Rupee Ticker for Paise Minor Units.
- * Converts Long paise to formatted Indian rupee string (e.g. ₹46,500.00 or ₹46,500)
- * and animates the digits with rolling spring physics.
+ * High-performance Animated Indian Rupee Ticker for Paise Minor Units.
+ * Smoothly transitions balances with Stride vertical slide + fade spring motion
+ * without subcomposition overhead.
  */
 @Composable
 fun AnimatedRupeeTicker(
@@ -76,10 +36,44 @@ fun AnimatedRupeeTicker(
         String.format(Locale.getDefault(), "%s%,.0f", prefix, paise / 100.0)
     }
 
-    AnimatedCounter(
-        text = formatted,
-        style = style,
-        modifier = modifier,
-        color = color
-    )
+    AnimatedContent(
+        targetState = formatted,
+        transitionSpec = {
+            val springSpec = spring<androidx.compose.ui.unit.IntOffset>(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            )
+            (slideInVertically(springSpec) { it / 2 } + fadeIn(spring())) togetherWith
+                    (slideOutVertically(springSpec) { -it / 2 } + fadeOut(spring()))
+        },
+        label = "rupeeTicker",
+        modifier = modifier
+    ) { text ->
+        Text(
+            text = text,
+            style = style,
+            color = color
+        )
+    }
+}
+
+/** Fallback AnimatedCounter */
+@Composable
+fun AnimatedCounter(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    color: Color = LocalContentColor.current
+) {
+    AnimatedContent(
+        targetState = text,
+        transitionSpec = {
+            (slideInVertically { it / 2 } + fadeIn()) togetherWith
+                    (slideOutVertically { -it / 2 } + fadeOut())
+        },
+        label = "counter",
+        modifier = modifier
+    ) { str ->
+        Text(text = str, style = style, color = color)
+    }
 }

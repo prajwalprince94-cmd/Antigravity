@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
@@ -53,11 +55,16 @@ import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.CardShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
+import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedDark
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
+import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenDark
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenLight
 import com.prajwalprince94.expensetracker.ui.theme.TransferBlue
+import com.prajwalprince94.expensetracker.ui.theme.TransferBlueDark
 import com.prajwalprince94.expensetracker.ui.theme.TransferBlueLight
+import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
+import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -147,30 +154,36 @@ fun HomeScreen(
 
         // 2. Hero Net Balance GlassCard with Soft Glow & Rolling Odometer
         item {
+            val isDark = isSystemInDarkTheme()
+            val incomePillBg = if (isDark) Color(0xFF10B981).copy(alpha = 0.16f) else IncomeGreenLight
+            val incomePillText = if (isDark) IncomeGreenDark else Color(0xFF059669)
+            val expensePillBg = if (isDark) Color(0xFFEF4444).copy(alpha = 0.16f) else ExpenseRedLight
+            val expensePillText = if (isDark) ExpenseRedDark else Color(0xFFDC2626)
+
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glow(MaterialTheme.colorScheme.primaryContainer, radius = 90.dp, alpha = 0.3f)
+                    .glow(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f), radius = 90.dp, alpha = 0.25f)
                     .entrance(1),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 contentPadding = 22.dp
             ) {
                 Text(
                     text = "TOTAL NET BALANCE",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.2.sp,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 AnimatedRupeeTicker(
                     paise = netBalancePaise,
                     style = MaterialTheme.typography.displayMedium.copy(
                         fontWeight = FontWeight.ExtraBold
                     ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -188,7 +201,8 @@ fun HomeScreen(
                                 onOpenQuickAdd(TransactionType.INCOME)
                             },
                         shape = RoundedCornerShape(20.dp),
-                        color = IncomeGreenLight.copy(alpha = 0.95f)
+                        color = incomePillBg,
+                        border = if (isDark) BorderStroke(1.dp, IncomeGreen.copy(alpha = 0.35f)) else null
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -196,7 +210,7 @@ fun HomeScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(32.dp)
+                                    .size(34.dp)
                                     .clip(CircleShape)
                                     .background(IncomeGreen),
                                 contentAlignment = Alignment.Center
@@ -210,14 +224,14 @@ fun HomeScreen(
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
-                                Text(text = "Income", fontSize = 11.sp, color = IncomeGreen, fontWeight = FontWeight.Bold)
+                                Text(text = "Income", fontSize = 11.sp, color = incomePillText, fontWeight = FontWeight.Bold)
                                 AnimatedRupeeTicker(
                                     paise = totalIncomePaise,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     ),
-                                    color = IncomeGreen,
+                                    color = incomePillText,
                                     prefix = "+"
                                 )
                             }
@@ -232,7 +246,8 @@ fun HomeScreen(
                                 onOpenQuickAdd(TransactionType.EXPENSE)
                             },
                         shape = RoundedCornerShape(20.dp),
-                        color = ExpenseRedLight.copy(alpha = 0.95f)
+                        color = expensePillBg,
+                        border = if (isDark) BorderStroke(1.dp, ExpenseRed.copy(alpha = 0.35f)) else null
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -240,7 +255,7 @@ fun HomeScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(32.dp)
+                                    .size(34.dp)
                                     .clip(CircleShape)
                                     .background(ExpenseRed),
                                 contentAlignment = Alignment.Center
@@ -254,14 +269,14 @@ fun HomeScreen(
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
-                                Text(text = "Expense", fontSize = 11.sp, color = ExpenseRed, fontWeight = FontWeight.Bold)
+                                Text(text = "Expense", fontSize = 11.sp, color = expensePillText, fontWeight = FontWeight.Bold)
                                 AnimatedRupeeTicker(
                                     paise = totalExpensePaise,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     ),
-                                    color = ExpenseRed,
+                                    color = expensePillText,
                                     prefix = "-"
                                 )
                             }
@@ -412,17 +427,10 @@ fun HomeScreen(
 
         // 6. Recent Transaction Items (Top 5) with GlassCard & StatusPill
         val recentList = transactions.take(5)
+        val isDarkTheme = isSystemInDarkTheme()
         items(recentList) { txn ->
-            val tintColor = when (txn.type) {
-                TransactionType.TRANSFER -> TransferBlue
-                TransactionType.EXPENSE -> ExpenseRed
-                TransactionType.INCOME -> IncomeGreen
-            }
-            val bgColor = when (txn.type) {
-                TransactionType.TRANSFER -> TransferBlueLight
-                TransactionType.EXPENSE -> ExpenseRedLight
-                TransactionType.INCOME -> IncomeGreenLight
-            }
+            val tintColor = getFinancialColor(txn.type, isDarkTheme)
+            val bgColor = getFinancialContainerColor(txn.type, isDarkTheme)
 
             GlassCard(
                 modifier = Modifier
@@ -457,7 +465,8 @@ fun HomeScreen(
                         Text(
                             text = txn.title,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             StatusPill(

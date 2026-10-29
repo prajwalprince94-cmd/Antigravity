@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bob
@@ -47,12 +48,8 @@ import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
-import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
-import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
-import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
-import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenLight
-import com.prajwalprince94.expensetracker.ui.theme.TransferBlue
-import com.prajwalprince94.expensetracker.ui.theme.TransferBlueLight
+import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
+import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 
 @Composable
 fun TransactionsScreen(
@@ -189,6 +186,7 @@ fun TransactionsScreen(
                 }
             }
         } else {
+            val isDarkTheme = isSystemInDarkTheme()
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -196,16 +194,8 @@ fun TransactionsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filteredList) { txn ->
-                    val bgColor = when (txn.type) {
-                        TransactionType.TRANSFER -> TransferBlueLight
-                        TransactionType.EXPENSE -> ExpenseRedLight
-                        TransactionType.INCOME -> IncomeGreenLight
-                    }
-                    val tintColor = when (txn.type) {
-                        TransactionType.TRANSFER -> TransferBlue
-                        TransactionType.EXPENSE -> ExpenseRed
-                        TransactionType.INCOME -> IncomeGreen
-                    }
+                    val bgColor = getFinancialContainerColor(txn.type, isDarkTheme)
+                    val tintColor = getFinancialColor(txn.type, isDarkTheme)
 
                     GlassCard(
                         modifier = Modifier
@@ -240,7 +230,8 @@ fun TransactionsScreen(
                                 Text(
                                     text = txn.title,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     StatusPill(

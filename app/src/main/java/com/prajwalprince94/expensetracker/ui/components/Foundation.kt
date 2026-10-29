@@ -94,7 +94,13 @@ fun GlassCard(
                         shape
                     )
                 } else {
-                    Modifier
+                    Modifier.border(
+                        BorderStroke(
+                            width = 1.dp,
+                            color = borderTint.copy(alpha = 0.45f)
+                        ),
+                        shape
+                    )
                 }
             )
             .padding(contentPadding),

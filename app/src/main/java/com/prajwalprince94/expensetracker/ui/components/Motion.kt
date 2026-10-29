@@ -18,9 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -135,43 +137,40 @@ fun Modifier.bob(amplitude: Dp = 4.dp, durationMs: Int = 1600): Modifier {
 }
 
 /**
- * Fades the top and bottom edges of a scrolling container so content dissolves
- * smoothly instead of being clipped abruptly. Inspired by NikhilKain/vyxel-apps.
+ * Smoothly blends list items at the top and bottom edges without offscreen buffer allocation,
+ * ensuring high frame rates and stutter-free scrolling on all devices.
  */
 fun Modifier.fadingEdges(
     top: Dp = 0.dp,
     bottom: Dp = 32.dp,
+    fadeColor: Color = Color.Unspecified
 ): Modifier = composed {
     val density = LocalDensity.current
     val topPx = with(density) { top.toPx() }
     val bottomPx = with(density) { bottom.toPx() }
+    val color = if (fadeColor != Color.Unspecified) fadeColor else MaterialTheme.colorScheme.background
 
-    graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-        .drawWithCache {
-            onDrawWithContent {
-                drawContent()
-                if (topPx > 0f) {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black),
-                            startY = 0f,
-                            endY = topPx,
-                        ),
-                        blendMode = BlendMode.DstIn,
-                    )
-                }
-                if (bottomPx > 0f) {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color.Black, Color.Transparent),
-                            startY = size.height - bottomPx,
-                            endY = size.height,
-                        ),
-                        blendMode = BlendMode.DstIn,
-                    )
-                }
-            }
+    drawWithContent {
+        drawContent()
+        if (topPx > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(color, Color.Transparent),
+                    startY = 0f,
+                    endY = topPx
+                )
+            )
         }
+        if (bottomPx > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, color),
+                    startY = size.height - bottomPx,
+                    endY = size.height
+                )
+            )
+        }
+    }
 }
 
 /** Sweeping highlight shimmer effect inspired by NikhilKain/vyxel-apps. */
