@@ -47,6 +47,7 @@ import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
+import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.components.glow
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
@@ -96,6 +97,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .fadingEdges(top = 8.dp, bottom = 80.dp)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -122,21 +124,23 @@ fun HomeScreen(
                     )
                 }
 
-                IconButton(
-                    onClick = { onShowMessage("All caught up! No unread notifications.") },
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .bouncyClickable(scaleDown = 0.88f) {
                             onShowMessage("All caught up! No unread notifications.")
                         }
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
         }

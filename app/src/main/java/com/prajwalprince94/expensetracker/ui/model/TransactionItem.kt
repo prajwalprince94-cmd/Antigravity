@@ -24,8 +24,18 @@ data class TransactionItem(
     val type: TransactionType,
     val formattedDate: String,
     val note: String = "",
-    val icon: ImageVector = Icons.Default.ReceiptLong
+    val iconName: String = "ReceiptLong"
 ) {
+    val icon: ImageVector
+        get() = when (category) {
+            "Groceries" -> Icons.Default.ShoppingCart
+            "Salary" -> Icons.Default.Work
+            "Transfer", "Account Transfer" -> Icons.Default.SwapHoriz
+            "Food & Dining" -> Icons.Default.Fastfood
+            "Fuel & Petrol", "Transportation", "Fuel & Travel" -> Icons.Default.TimeToLeave
+            else -> Icons.Default.ReceiptLong
+        }
+
     val formattedAmount: String
         get() {
             val rupees = amountPaise / 100.0
@@ -48,7 +58,7 @@ data class TransactionItem(
                 type = TransactionType.EXPENSE,
                 formattedDate = "Today, 4:15 PM",
                 note = "Vegetables, milk, and bread",
-                icon = Icons.Default.ShoppingCart
+                iconName = "ShoppingCart"
             ),
             TransactionItem(
                 id = "2",
@@ -59,7 +69,7 @@ data class TransactionItem(
                 type = TransactionType.INCOME,
                 formattedDate = "Yesterday, 10:00 AM",
                 note = "October salary credited",
-                icon = Icons.Default.Work
+                iconName = "Work"
             ),
             TransactionItem(
                 id = "3",
@@ -70,7 +80,7 @@ data class TransactionItem(
                 type = TransactionType.TRANSFER,
                 formattedDate = "28 Oct, 6:30 PM",
                 note = "ATM cash withdrawal for weekend",
-                icon = Icons.Default.SwapHoriz
+                iconName = "SwapHoriz"
             ),
             TransactionItem(
                 id = "4",
@@ -81,7 +91,7 @@ data class TransactionItem(
                 type = TransactionType.EXPENSE,
                 formattedDate = "27 Oct, 9:20 PM",
                 note = "Pizza and beverages",
-                icon = Icons.Default.Fastfood
+                iconName = "Fastfood"
             ),
             TransactionItem(
                 id = "5",
@@ -92,7 +102,7 @@ data class TransactionItem(
                 type = TransactionType.EXPENSE,
                 formattedDate = "26 Oct, 8:10 AM",
                 note = "Full tank petrol",
-                icon = Icons.Default.TimeToLeave
+                iconName = "TimeToLeave"
             )
         )
     }

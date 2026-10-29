@@ -139,25 +139,37 @@ fun TransactionDetailSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Action: Delete Transaction with Bouncy Click
-            OutlinedButton(
-                onClick = {
-                    onDelete(transaction.id)
-                    onDismiss()
-                },
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = ExpenseRed),
+            // Action: Delete Transaction with Stride Bouncy Press
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
                     .bouncyClickable(scaleDown = 0.94f) {
                         onDelete(transaction.id)
                         onDismiss()
-                    }
+                    },
+                shape = RoundedCornerShape(18.dp),
+                color = ExpenseRedLight.copy(alpha = 0.25f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ExpenseRed.copy(alpha = 0.5f))
             ) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Delete Transaction", fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = ExpenseRed
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Delete Transaction",
+                        fontWeight = FontWeight.Bold,
+                        color = ExpenseRed
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(36.dp))

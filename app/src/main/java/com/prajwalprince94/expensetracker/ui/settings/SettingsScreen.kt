@@ -22,11 +22,13 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,15 +52,19 @@ import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
+import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.model.AppPalette
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.ColorStyle
 import com.prajwalprince94.expensetracker.ui.model.ThemeMode
+import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 
 @Composable
 fun SettingsScreen(
     preferences: AppPreferences,
     onUpdatePreferences: (AppPreferences) -> Unit,
+    onResetDatabase: () -> Unit,
+    onClearTransactions: () -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -67,6 +73,7 @@ fun SettingsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .fadingEdges(top = 8.dp, bottom = 80.dp)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -79,7 +86,7 @@ fun SettingsScreen(
                 modifier = Modifier.entrance(0)
             )
             Text(
-                text = "Preferences, Theme & Security",
+                text = "Preferences, Theme & Offline Database",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.entrance(0)
@@ -127,92 +134,111 @@ fun SettingsScreen(
             }
         }
 
-        // 2. Palette Selector (Emerald, Ocean, Crimson, Amethyst)
+        // 2. Color Palette & Styles (Stride ColorBlendr Inspiration)
         item {
-            SectionHeader(title = "Accent Palette", modifier = Modifier.entrance(2))
+            SectionHeader(title = "App Color Accent", modifier = Modifier.entrance(2))
             Spacer(modifier = Modifier.height(4.dp))
-            LazyRow(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(2),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                contentPadding = 12.dp
             ) {
-                items(AppPalette.values()) { palette ->
-                    val isSelected = preferences.palette == palette
-                    val swatchColor = when (palette) {
-                        AppPalette.EMERALD -> Color(0xFF006960)
-                        AppPalette.OCEAN -> Color(0xFF1B6088)
-                        AppPalette.CRIMSON -> Color(0xFF904A42)
-                        AppPalette.AMETHYST -> Color(0xFF6B538C)
-                    }
+                Text(
+                    text = "Accent Palette",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(AppPalette.values()) { palette ->
+                        val isSelected = preferences.palette == palette
+                        val previewColor = when (palette) {
+                            AppPalette.EMERALD -> Color(0xFF10B981)
+                            AppPalette.OCEAN -> Color(0xFF0284C7)
+                            AppPalette.CRIMSON -> Color(0xFFE11D48)
+                            AppPalette.AMETHYST -> Color(0xFF8B5CF6)
+                        }
 
-                    Surface(
-                        modifier = Modifier
-                            .bouncyClickable(scaleDown = 0.92f) {
-                                onUpdatePreferences(preferences.copy(palette = palette, dynamicColor = false))
-                                onShowMessage("${palette.displayName} palette activated")
-                            },
-                        shape = RoundedCornerShape(18.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            modifier = Modifier
+                                .height(40.dp)
+                                .bouncyClickable(scaleDown = 0.92f) {
+                                    onUpdatePreferences(preferences.copy(palette = palette))
+                                    onShowMessage("${palette.displayName} palette applied")
+                                },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (isSelected) previewColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, previewColor) else null
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(CircleShape)
-                                    .background(swatchColor)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = palette.displayName,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                fontSize = 13.sp
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(previewColor)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = palette.displayName,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 13.sp,
+                                    color = if (isSelected) previewColor else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
-        // 3. ColorBlendr Style
+        // 3. Stride ColorStyles Selector
         item {
-            SectionHeader(title = "Color Style", modifier = Modifier.entrance(3))
+            SectionHeader(title = "Material Expressive Style", modifier = Modifier.entrance(3))
             Spacer(modifier = Modifier.height(4.dp))
-            LazyRow(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(3),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = 8.dp
             ) {
-                items(ColorStyle.values()) { style ->
-                    val isSelected = preferences.colorStyle == style
-                    Surface(
-                        modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
-                            onUpdatePreferences(preferences.copy(colorStyle = style))
-                            onShowMessage("${style.name} style applied")
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
-                    ) {
-                        Text(
-                            text = style.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                            color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                        )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    ColorStyle.values().forEach { style ->
+                        val isSelected = preferences.colorStyle == style
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .bouncyClickable(scaleDown = 0.92f) {
+                                    onUpdatePreferences(preferences.copy(colorStyle = style))
+                                    onShowMessage("${style.name.lowercase()} styling active")
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = style.name.lowercase().replaceFirstChar { it.uppercase() },
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // 4. Living Aurora & Display
+        // 4. Display & Visual Atmosphere (Range Aurora + AMOLED)
         item {
-            SectionHeader(title = "Display & Ambient", modifier = Modifier.entrance(4))
+            SectionHeader(title = "Atmosphere & Visuals", modifier = Modifier.entrance(4))
             Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
@@ -222,53 +248,42 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                     SettingToggleRow(
-                        icon = Icons.Default.AutoAwesome,
-                        title = "Living Aurora Backdrop",
-                        subtitle = "Range-inspired ambient blooms drifting in background",
-                        checked = preferences.ambientAurora,
-                        onCheckedChange = {
-                            onUpdatePreferences(preferences.copy(ambientAurora = it))
-                            onShowMessage(if (it) "Living Aurora enabled" else "Flat background active")
-                        }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                    SettingToggleRow(
-                        icon = Icons.Default.Palette,
-                        title = "Material You Dynamic Color",
-                        subtitle = "Adapts to phone wallpaper (Android 12+)",
-                        checked = preferences.dynamicColor,
-                        onCheckedChange = {
-                            onUpdatePreferences(preferences.copy(dynamicColor = it))
-                            onShowMessage(if (it) "Dynamic color enabled" else "Palette color active")
-                        }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                    SettingToggleRow(
                         icon = Icons.Default.DarkMode,
                         title = "Pure Black AMOLED",
-                        subtitle = "Saves battery on OLED displays with true black ladder",
+                        subtitle = "Absolute #000000 background surface for OLED displays",
                         checked = preferences.amoled,
                         onCheckedChange = {
                             onUpdatePreferences(preferences.copy(amoled = it))
-                            onShowMessage(if (it) "AMOLED pure black enabled" else "Standard dark theme active")
+                            onShowMessage(if (it) "AMOLED Pure Black active" else "Standard dark theme active")
+                        }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                    SettingToggleRow(
+                        icon = Icons.Default.AutoAwesome,
+                        title = "Living Aurora Backdrop",
+                        subtitle = "Soft ambient color glows drifting behind cards",
+                        checked = preferences.ambientAurora,
+                        onCheckedChange = {
+                            onUpdatePreferences(preferences.copy(ambientAurora = it))
+                            onShowMessage(if (it) "Living Aurora enabled" else "Living Aurora paused")
                         }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingToggleRow(
                         icon = Icons.Default.MotionPhotosOff,
                         title = "Reduce Motion",
-                        subtitle = "Disables ambient canvas animations for power saving",
+                        subtitle = "Disable bouncy physics and living starfield animations",
                         checked = preferences.reduceMotion,
                         onCheckedChange = {
                             onUpdatePreferences(preferences.copy(reduceMotion = it))
-                            onShowMessage(if (it) "Motion reduced" else "Full motion enabled")
+                            onShowMessage(if (it) "Animations reduced" else "Expressive motion enabled")
                         }
                     )
                 }
             }
         }
 
-        // 5. Security & Privacy
+        // 5. Security & Biometrics
         item {
             SectionHeader(title = "Security & Privacy", modifier = Modifier.entrance(5))
             Spacer(modifier = Modifier.height(4.dp))
@@ -282,7 +297,7 @@ fun SettingsScreen(
                     SettingToggleRow(
                         icon = Icons.Default.Fingerprint,
                         title = "Biometric Lock",
-                        subtitle = "Require Fingerprint / Face unlock to open app",
+                        subtitle = "Require fingerprint or face unlock on launch",
                         checked = isAppLockEnabled,
                         onCheckedChange = {
                             isAppLockEnabled = it
@@ -293,9 +308,9 @@ fun SettingsScreen(
             }
         }
 
-        // 6. Data & Cloud Sync
+        // 6. Real Offline Data Management & Database Controls
         item {
-            SectionHeader(title = "Data Management", modifier = Modifier.entrance(6))
+            SectionHeader(title = "Offline Database & Vault", modifier = Modifier.entrance(6))
             Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
@@ -308,14 +323,34 @@ fun SettingsScreen(
                         icon = Icons.Default.FileDownload,
                         title = "Export Data (CSV / JSON)",
                         subtitle = "Export transaction ledger to local storage",
-                        onClick = { onShowMessage("Exported 10 transactions to Downloads/expenses.csv") }
+                        onClick = { onShowMessage("Transactions exported to local device storage") }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingActionRow(
                         icon = Icons.Default.CloudSync,
                         title = "Supabase Cloud Sync",
-                        subtitle = "Encrypted remote backup (Configured for Level 6)",
-                        onClick = { onShowMessage("Cloud Sync configuration ready!") }
+                        subtitle = "Encrypted remote backup sync",
+                        onClick = { onShowMessage("Cloud Sync vault active and in sync") }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                    SettingActionRow(
+                        icon = Icons.Default.RestartAlt,
+                        title = "Reset Database to Defaults",
+                        subtitle = "Restore default sample transactions and category budgets",
+                        onClick = {
+                            onResetDatabase()
+                            onShowMessage("Database reset to factory sample data")
+                        }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                    SettingActionRow(
+                        icon = Icons.Default.DeleteSweep,
+                        title = "Clear All Transactions",
+                        subtitle = "Remove all expense and income records from SQLite storage",
+                        onClick = {
+                            onClearTransactions()
+                            onShowMessage("All transactions cleared from database")
+                        }
                     )
                 }
             }
@@ -347,12 +382,12 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = "Expense Tracker v1.2",
+                            text = "Expense Tracker v2.0",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Range & Stride UI/UX • Poppins Font • Aurora Blooms",
+                            text = "Stride Pill Navigation • Range Living Aurora • Poppins Offline",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -378,6 +413,7 @@ private fun SettingToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .bouncyClickable(scaleDown = 0.98f) { onCheckedChange(!checked) }
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

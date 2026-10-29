@@ -19,9 +19,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -63,29 +69,25 @@ fun Modifier.entrance(index: Int = 0): Modifier {
 }
 
 /**
- * Bouncy tap feedback inspired by NikhilKain/stride:
- * The element squashes on press and springs back on release with optional haptic buzz.
+ * Tap feedback the expressive way (Stride): the element itself squashes on press
+ * and springs back on release. Replaces the ripple.
  */
 @Composable
 fun Modifier.bouncyClickable(
-    scaleDown: Float = 0.92f,
+    scaleDown: Float = 0.90f,
     enabled: Boolean = true,
-    enableHaptic: Boolean = true,
     onClick: () -> Unit
 ): Modifier {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val haptic = LocalHapticFeedback.current
-
     val scale by animateFloatAsState(
         targetValue = if (pressed) scaleDown else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
         ),
-        label = "bouncyScale"
+        label = "bouncyPress"
     )
-
     return graphicsLayer {
         scaleX = scale
         scaleY = scale
@@ -93,12 +95,7 @@ fun Modifier.bouncyClickable(
         interactionSource = interaction,
         indication = null,
         enabled = enabled,
-        onClick = {
-            if (enableHaptic) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            }
-            onClick()
-        }
+        onClick = onClick
     )
 }
 
@@ -135,4 +132,75 @@ fun Modifier.bob(amplitude: Dp = 4.dp, durationMs: Int = 1600): Modifier {
         label = "bobOffset"
     )
     return graphicsLayer { translationY = offset * amplitude.toPx() }
+}
+
+/**
+ * Fades the top and bottom edges of a scrolling container so content dissolves
+ * smoothly instead of being clipped abruptly. Inspired by NikhilKain/vyxel-apps.
+ */
+fun Modifier.fadingEdges(
+    top: Dp = 0.dp,
+    bottom: Dp = 32.dp,
+): Modifier = composed {
+    val density = LocalDensity.current
+    val topPx = with(density) { top.toPx() }
+    val bottomPx = with(density) { bottom.toPx() }
+
+    graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+        .drawWithCache {
+            onDrawWithContent {
+                drawContent()
+                if (topPx > 0f) {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black),
+                            startY = 0f,
+                            endY = topPx,
+                        ),
+                        blendMode = BlendMode.DstIn,
+                    )
+                }
+                if (bottomPx > 0f) {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.Black, Color.Transparent),
+                            startY = size.height - bottomPx,
+                            endY = size.height,
+                        ),
+                        blendMode = BlendMode.DstIn,
+                    )
+                }
+            }
+        }
+}
+
+/** Sweeping highlight shimmer effect inspired by NikhilKain/vyxel-apps. */
+fun Modifier.shimmer(
+    baseColor: Color? = null,
+    highlightColor: Color? = null,
+): Modifier = composed {
+    val base = baseColor ?: Color.White.copy(alpha = 0.08f)
+    val highlight = highlightColor ?: Color.White.copy(alpha = 0.25f)
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerProgress"
+    )
+
+    drawWithCache {
+        val width = size.width.coerceAtLeast(1f)
+        val travel = width * 2f
+        val start = -width + travel * progress
+        val brush = Brush.linearGradient(
+            colors = listOf(base, highlight, base),
+            start = Offset(start, 0f),
+            end = Offset(start + width, size.height)
+        )
+        onDrawBehind { drawRect(brush) }
+    }
 }

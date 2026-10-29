@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,15 +14,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,9 +33,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.navigation.Screen
 import com.prajwalprince94.expensetracker.ui.budgets.BudgetsScreen
 import com.prajwalprince94.expensetracker.ui.components.AuroraBackground
+import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
 import com.prajwalprince94.expensetracker.ui.components.LocalReduceMotion
 import com.prajwalprince94.expensetracker.ui.components.QuickAddTransactionSheet
@@ -52,16 +54,68 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ExpenseGraph.ensureInit(this)
         enableEdgeToEdge()
+
         setContent {
-            var preferences by remember { mutableStateOf(AppPreferences()) }
+            val repository = ExpenseGraph.repository
+            val preferences by repository.preferences.collectAsState()
+            val transactions by repository.transactions.collectAsState()
+            val budgets by repository.budgets.collectAsState()
+            val isLoaded by repository.isLoaded.collectAsState()
+
+            var hasBooted by remember { mutableStateOf(false) }
 
             ExpenseTrackerTheme(preferences = preferences) {
                 CompositionLocalProvider(LocalReduceMotion provides preferences.reduceMotion) {
-                    MainApp(
-                        preferences = preferences,
-                        onUpdatePreferences = { preferences = it }
-                    )
+                    Crossfade(
+                        targetState = hasBooted,
+                        animationSpec = tween(400),
+                        label = "appBootCrossfade"
+                    ) { booted ->
+                        if (!booted) {
+                            BootSequence(
+                                isDataLoaded = isLoaded,
+                                onBootComplete = { hasBooted = true }
+                            )
+                        } else {
+                            MainApp(
+                                preferences = preferences,
+                                transactions = transactions,
+                                budgets = budgets,
+                                onAddTransaction = { txn ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addTransaction(txn)
+                                    }
+                                },
+                                onDeleteTransaction = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.deleteTransaction(id)
+                                    }
+                                },
+                                onUpdateBudgetLimit = { id, limit ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.updateBudgetLimit(id, limit)
+                                    }
+                                },
+                                onUpdatePreferences = { newPrefs ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.savePreferences(newPrefs)
+                                    }
+                                },
+                                onResetDatabase = {
+                                    ExpenseGraph.appScope.launch {
+                                        repository.resetDatabase()
+                                    }
+                                },
+                                onClearTransactions = {
+                                    ExpenseGraph.appScope.launch {
+                                        repository.clearTransactions()
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -72,7 +126,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp(
     preferences: AppPreferences,
-    onUpdatePreferences: (AppPreferences) -> Unit
+    transactions: List<TransactionItem>,
+    budgets: List<CategoryBudgetItem>,
+    onAddTransaction: (TransactionItem) -> Unit,
+    onDeleteTransaction: (String) -> Unit,
+    onUpdateBudgetLimit: (String, Long) -> Unit,
+    onUpdatePreferences: (AppPreferences) -> Unit,
+    onResetDatabase: () -> Unit,
+    onClearTransactions: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -80,11 +141,6 @@ fun MainApp(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-
-    // Dynamic shared transaction ledger state
-    val transactions = remember {
-        mutableStateListOf(*TransactionItem.defaultSampleList().toTypedArray())
-    }
 
     // Modal Bottom Sheet States
     var showQuickAddSheet by remember { mutableStateOf(false) }
@@ -126,16 +182,16 @@ fun MainApp(
                     .fillMaxSize()
                     .padding(innerPadding),
                 enterTransition = {
-                    slideInHorizontally(tween(360)) { it / 6 } + fadeIn(tween(260))
+                    slideInHorizontally(tween(340)) { it / 6 } + fadeIn(tween(240))
                 },
                 exitTransition = {
-                    slideOutHorizontally(tween(360)) { -it / 8 } + fadeOut(tween(200))
+                    slideOutHorizontally(tween(340)) { -it / 8 } + fadeOut(tween(180))
                 },
                 popEnterTransition = {
-                    slideInHorizontally(tween(340)) { -it / 8 } + fadeIn(tween(240))
+                    slideInHorizontally(tween(320)) { -it / 8 } + fadeIn(tween(220))
                 },
                 popExitTransition = {
-                    slideOutHorizontally(tween(340)) { it / 6 } + fadeOut(tween(200))
+                    slideOutHorizontally(tween(320)) { it / 6 } + fadeOut(tween(180))
                 }
             ) {
                 composable(Screen.Home.route) {
@@ -174,6 +230,8 @@ fun MainApp(
 
                 composable(Screen.Budgets.route) {
                     BudgetsScreen(
+                        budgetItems = budgets,
+                        onUpdateBudgetLimit = onUpdateBudgetLimit,
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
                         }
@@ -184,6 +242,8 @@ fun MainApp(
                     SettingsScreen(
                         preferences = preferences,
                         onUpdatePreferences = onUpdatePreferences,
+                        onResetDatabase = onResetDatabase,
+                        onClearTransactions = onClearTransactions,
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
                         }
@@ -199,7 +259,7 @@ fun MainApp(
                 initialType = quickAddInitialType,
                 onDismiss = { showQuickAddSheet = false },
                 onSaveTransaction = { newTxn ->
-                    transactions.add(0, newTxn)
+                    onAddTransaction(newTxn)
                     showQuickAddSheet = false
                     scope.launch {
                         snackbarHostState.showSnackbar(
@@ -217,10 +277,10 @@ fun MainApp(
                 sheetState = detailSheetState,
                 onDismiss = { selectedTransactionForDetail = null },
                 onDelete = { deletedId ->
-                    transactions.removeAll { it.id == deletedId }
+                    onDeleteTransaction(deletedId)
                     selectedTransactionForDetail = null
                     scope.launch {
-                        snackbarHostState.showSnackbar("Transaction deleted")
+                        snackbarHostState.showSnackbar("Transaction deleted from database")
                     }
                 }
             )

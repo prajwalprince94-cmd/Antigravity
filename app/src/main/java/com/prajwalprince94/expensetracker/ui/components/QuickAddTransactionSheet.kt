@@ -319,55 +319,25 @@ fun QuickAddTransactionSheet(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Big Save Button with Bouncy Tap Action
-            Button(
-                onClick = {
-                    if (parsedAmountPaise > 0) {
-                        val icon = when (selectedCategory) {
-                            "Food & Dining" -> Icons.Default.Fastfood
-                            "Groceries" -> Icons.Default.ShoppingCart
-                            "Fuel & Travel" -> Icons.Default.LocalGasStation
-                            "Rent & Bills" -> Icons.Default.Home
-                            "Shopping" -> Icons.Default.ReceiptLong
-                            "Salary" -> Icons.Default.Work
-                            "Freelance" -> Icons.Default.Payments
-                            else -> if (selectedType == TransactionType.TRANSFER) Icons.Default.SwapHoriz else Icons.Default.Fastfood
-                        }
-
-                        val newTxn = TransactionItem(
-                            id = UUID.randomUUID().toString(),
-                            title = if (noteInput.isNotBlank()) noteInput else selectedCategory,
-                            category = selectedCategory,
-                            account = selectedAccount,
-                            amountPaise = parsedAmountPaise,
-                            type = selectedType,
-                            formattedDate = "Just now",
-                            note = noteInput,
-                            icon = icon
-                        )
-                        onSaveTransaction(newTxn)
-                    }
-                },
-                enabled = parsedAmountPaise > 0,
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = activeColor),
+            // Big Save Action Button with Stride Bouncy Physical Press
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .bouncyClickable(
-                        scaleDown = 0.95f,
+                        scaleDown = 0.94f,
                         enabled = parsedAmountPaise > 0,
                         onClick = {
                             if (parsedAmountPaise > 0) {
-                                val icon = when (selectedCategory) {
-                                    "Food & Dining" -> Icons.Default.Fastfood
-                                    "Groceries" -> Icons.Default.ShoppingCart
-                                    "Fuel & Travel" -> Icons.Default.LocalGasStation
-                                    "Rent & Bills" -> Icons.Default.Home
-                                    "Shopping" -> Icons.Default.ReceiptLong
-                                    "Salary" -> Icons.Default.Work
-                                    "Freelance" -> Icons.Default.Payments
-                                    else -> if (selectedType == TransactionType.TRANSFER) Icons.Default.SwapHoriz else Icons.Default.Fastfood
+                                val iconName = when (selectedCategory) {
+                                    "Food & Dining" -> "Fastfood"
+                                    "Groceries" -> "ShoppingCart"
+                                    "Fuel & Travel" -> "TimeToLeave"
+                                    "Rent & Bills" -> "Home"
+                                    "Shopping" -> "ReceiptLong"
+                                    "Salary" -> "Work"
+                                    "Freelance" -> "Payments"
+                                    else -> if (selectedType == TransactionType.TRANSFER) "SwapHoriz" else "ReceiptLong"
                                 }
 
                                 val newTxn = TransactionItem(
@@ -379,20 +349,34 @@ fun QuickAddTransactionSheet(
                                     type = selectedType,
                                     formattedDate = "Just now",
                                     note = noteInput,
-                                    icon = icon
+                                    iconName = iconName
                                 )
                                 onSaveTransaction(newTxn)
                             }
                         }
-                    )
+                    ),
+                shape = RoundedCornerShape(20.dp),
+                color = if (parsedAmountPaise > 0) activeColor else MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Save ${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = if (parsedAmountPaise > 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Save ${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (parsedAmountPaise > 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

@@ -41,31 +41,31 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v1.2-range-poppins.apk
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
 
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v1.2-preview"
-          name: "Expense Tracker Preview v1.2 (Range Redesign & Poppins Typography)"
+          tag_name: "v2.0-masterpiece"
+          name: "Expense Tracker v2.0 (Stride Masterpiece UI/UX, Vyxel Boot, Offline SQLite Vault)"
           body: |
-            ### 📱 Expense Tracker Preview Build v1.2
-            - **Typography:** Genuine offline-bundled **Poppins Font** family (Regular, Medium, SemiBold, Bold, ExtraBold)
-            - **Design & UI:** Complete redesign inspired by [NikhilKain/Range](https://github.com/NikhilKain/Range)
-            - **Atmosphere:** Living **AuroraBackground** with ambient color blooms & starfield drifting at power-saving 10-15 fps
-            - **Components:** **GlassCard** depth with hairline top borders in dark mode, **StatusPill**, and **SectionHeader**
-            - **Interactive BudgetTape:** Tape-measure dial with tactile haptic ruler scrubbing in Budgets
-            - **Motion & Navigation:** Range horizontal sliding + fade transitions across all screens and Stride bouncy clickables
-            - **Target:** Android 8.0 (API 26) through Android 15 (API 35)
+            ### 📱 Expense Tracker v2.0 Masterpiece Release
+            - **UI/UX & Navigation (Stride as Core Focus):** Floating pill dock with active tab horizontal spring expansion, icon overshoot pop animation, AMOLED dark surface ladder, and bouncy physical squash tap feedback.
+            - **Branded Startup Experience (Vyxel):** Branded `BootSequence` on cold start with pulsating brand mark, progress shimmer, and smooth 400ms crossfade into main app.
+            - **List Dissolution (Vyxel):** `Modifier.fadingEdges(top, bottom)` on all LazyColumns so content dissolves smoothly above navigation bars without harsh cutoffs.
+            - **Living Atmosphere & Scrubbing (Range):** Living `AuroraBackground` ambient color blooms and `BudgetTape` interactive tape-measure ruler dial with tactile feedback.
+            - **100% Working Offline-First SQLite Persistence:** Full ACID database persistence for transactions, category budgets, and preferences surviving device reboots.
+            - **Fixed Touch & Clicks:** Completely eliminated button click collisions for instant, reliable response on every tap.
+            - **Typography:** Genuine offline-bundled Poppins font family across all screens.
             
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v1.2-range-poppins.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.0-stride-masterpiece.apk`** below under Assets.
           draft: false
-          prerelease: true
+          prerelease: false
           files: |
-            app/build/outputs/apk/debug/ExpenseTracker-v1.2-range-poppins.apk
+            app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

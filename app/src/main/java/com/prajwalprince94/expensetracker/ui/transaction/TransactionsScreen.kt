@@ -44,6 +44,7 @@ import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bob
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
+import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
@@ -112,8 +113,7 @@ fun TransactionsScreen(
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(
-                        onClick = { searchQuery = "" },
-                        modifier = Modifier.bouncyClickable(scaleDown = 0.85f) { searchQuery = "" }
+                        onClick = { searchQuery = "" }
                     ) {
                         Icon(Icons.Default.Clear, contentDescription = "Clear search")
                     }
@@ -190,7 +190,9 @@ fun TransactionsScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .fadingEdges(top = 8.dp, bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filteredList) { txn ->

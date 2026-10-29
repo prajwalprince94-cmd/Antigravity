@@ -22,12 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LocalGasStation
-import androidx.compose.material.icons.filled.ReceiptLong
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,10 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
 import com.prajwalprince94.expensetracker.ui.components.BudgetTape
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
@@ -57,38 +50,21 @@ import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
+import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-data class CategoryBudgetItem(
-    val id: String,
-    val category: String,
-    val spentPaise: Long,
-    var limitPaise: Long,
-    val icon: ImageVector
-) {
-    val progress: Float get() = (spentPaise.toFloat() / limitPaise.coerceAtLeast(1L).toFloat()).coerceAtLeast(0f)
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetsScreen(
+    budgetItems: List<CategoryBudgetItem>,
+    onUpdateBudgetLimit: (String, Long) -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val budgetItems = remember {
-        mutableStateListOf(
-            CategoryBudgetItem("1", "Food & Dining", 620000L, 1000000L, Icons.Default.Fastfood),
-            CategoryBudgetItem("2", "Groceries", 780000L, 900000L, Icons.Default.ShoppingCart),
-            CategoryBudgetItem("3", "Shopping & Leisure", 540000L, 500000L, Icons.Default.ReceiptLong),
-            CategoryBudgetItem("4", "Fuel & Transport", 280000L, 400000L, Icons.Default.LocalGasStation),
-            CategoryBudgetItem("5", "Health & Fitness", 120000L, 300000L, Icons.Default.FitnessCenter)
-        )
-    }
-
     var editingBudget by remember { mutableStateOf<CategoryBudgetItem?>(null) }
     val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -108,9 +84,11 @@ fun BudgetsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .fadingEdges(top = 8.dp, bottom = 80.dp)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // 1. Header
         item {
             Spacer(modifier = Modifier.height(6.dp))
             Row(
@@ -122,38 +100,46 @@ fun BudgetsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Monthly Budgets",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text(
                         text = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = "Monthly Budgets",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold
+                    )
                 }
 
-                Button(
-                    onClick = { editingBudget = budgetItems.first() },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
-                        editingBudget = budgetItems.first()
-                    }
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .bouncyClickable(scaleDown = 0.88f) {
+                            onShowMessage("Tap 'Edit Limit' on any category below to adjust using the interactive ruler dial.")
+                        }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Edit Limit", fontWeight = FontWeight.Bold)
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "New Budget",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
         }
 
-        // Hero Monthly Budget Overview with Range GlassCard
+        // 2. Hero Overall Budget GlassCard
         item {
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(1),
-                contentPadding = 22.dp
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentPadding = 20.dp
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -163,98 +149,100 @@ fun BudgetsScreen(
                     Column {
                         Text(
                             text = "TOTAL BUDGET SPENT",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 1.2.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         AnimatedRupeeTicker(
                             paise = totalSpentPaise,
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 32.sp
-                            ),
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    StatusPill(
-                        label = "%.0f%% USED".format(overallProgress * 100),
-                        color = if (overallProgress > 0.9f) ExpenseRed else MaterialTheme.colorScheme.primary
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "TOTAL LIMIT",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 1.2.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "₹%,.0f".format(totalLimitPaise / 100.0),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // Progress Bar
                 LinearProgressIndicator(
                     progress = { animatedOverallProgress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(6.dp)),
+                        .height(10.dp)
+                        .clip(RoundedCornerShape(5.dp)),
                     color = if (overallProgress > 0.9f) ExpenseRed else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Remaining: ₹%,.0f".format((totalLimitPaise - totalSpentPaise).coerceAtLeast(0L) / 100.0),
+                        text = "%.1f%% Utilized".format(overallProgress * 100),
                         style = MaterialTheme.typography.bodySmall,
-                        color = IncomeGreen,
+                        color = if (overallProgress > 0.9f) ExpenseRed else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Limit: ₹%,.0f".format(totalLimitPaise / 100.0),
+                        text = "₹%,.0f Left".format((totalLimitPaise - totalSpentPaise).coerceAtLeast(0L) / 100.0),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = IncomeGreen,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        // Section Title
+        // 3. Category Budgets Header
         item {
             SectionHeader(
-                title = "Category Limits (Tap to customize with Dial)",
+                title = "Category Breakdown (${budgetItems.size})",
+                trailing = {
+                    Text(
+                        text = "Tap to Scrub",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 modifier = Modifier.entrance(2)
             )
         }
 
-        // Category Budget Items with GlassCard & StatusPill
+        // 4. Budget Items with Range GlassCard & Edit Action
         itemsIndexed(budgetItems) { index, budget ->
-            val animatedProgress by animateFloatAsState(
-                targetValue = budget.progress.coerceIn(0f, 1f),
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                ),
-                label = "catProgress$index"
-            )
-
-            val progressColor = when {
-                budget.progress > 1f -> ExpenseRed
-                budget.progress > 0.8f -> Color(0xFFE65100)
-                else -> IncomeGreen
-            }
-
-            val statusLabel = when {
-                budget.progress > 1f -> "EXCEEDED"
-                budget.progress > 0.8f -> "NEARING"
-                else -> "ON TRACK"
-            }
+            val isOver = budget.isOverBudget
+            val progressColor = if (isOver) ExpenseRed else if (budget.progress > 0.8f) Color(0xFFFF9800) else IncomeGreen
 
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .entrance(3 + index)
-                    .bouncyClickable(scaleDown = 0.95f) {
+                    .bouncyClickable(scaleDown = 0.96f) {
                         editingBudget = budget
-                    },
+                    }
+                    .entrance(3 + index),
                 contentPadding = 16.dp
             ) {
                 Row(
@@ -263,57 +251,99 @@ fun BudgetsScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = budget.icon,
-                            contentDescription = null,
+                            contentDescription = budget.category,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 text = budget.category,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            StatusPill(label = statusLabel, color = progressColor)
+                            StatusPill(
+                                label = if (isOver) "Exceeded" else "%.0f%%".format(budget.progress * 100),
+                                color = progressColor
+                            )
                         }
-                        Text(
-                            text = "Spent: ₹%,.0f / ₹%,.0f".format(budget.spentPaise / 100.0, budget.limitPaise / 100.0),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
 
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit budget",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Spent: ₹%,.0f".format(budget.spentPaise / 100.0),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Limit: ₹%,.0f".format(budget.limitPaise / 100.0),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                // Progress Bar
                 LinearProgressIndicator(
-                    progress = { animatedProgress },
+                    progress = { budget.progress.coerceIn(0f, 1f) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
                     color = progressColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Row(
+                        modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
+                            editingBudget = budget
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit limit",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Adjust Limit",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
 
@@ -322,7 +352,7 @@ fun BudgetsScreen(
         }
     }
 
-    // Modal Sheet to edit budget limits with Range BudgetTape Dial!
+    // Modal Bottom Sheet with the Interactive Range BudgetTape Ruler Scrubber!
     editingBudget?.let { itemToEdit ->
         ModalBottomSheet(
             onDismissRequest = { editingBudget = null },
@@ -333,18 +363,27 @@ fun BudgetsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Edit ${itemToEdit.category} Budget",
+                    text = "Adjust ${itemToEdit.category} Budget",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
+
                 Text(
-                    text = "SWIPE RULER TO ADJUST LIMIT",
+                    text = "Scrub the tactile tape-measure ruler dial to set a new limit",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "NEW MONTHLY LIMIT",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.2.sp,
@@ -364,11 +403,8 @@ fun BudgetsScreen(
                 BudgetTape(
                     valuePaise = itemToEdit.limitPaise,
                     onValueChange = { newPaise ->
-                        val idx = budgetItems.indexOfFirst { it.id == itemToEdit.id }
-                        if (idx != -1) {
-                            budgetItems[idx] = budgetItems[idx].copy(limitPaise = newPaise)
-                            editingBudget = budgetItems[idx]
-                        }
+                        onUpdateBudgetLimit(itemToEdit.id, newPaise)
+                        editingBudget = itemToEdit.copy(limitPaise = newPaise)
                     },
                     minPaise = 100000L,
                     maxPaise = 5000000L,
@@ -390,11 +426,8 @@ fun BudgetsScreen(
                                 .height(44.dp)
                                 .bouncyClickable(scaleDown = 0.9f) {
                                     val newLimit = (itemToEdit.limitPaise + delta).coerceIn(100000L, 5000000L)
-                                    val idx = budgetItems.indexOfFirst { it.id == itemToEdit.id }
-                                    if (idx != -1) {
-                                        budgetItems[idx] = budgetItems[idx].copy(limitPaise = newLimit)
-                                        editingBudget = budgetItems[idx]
-                                    }
+                                    onUpdateBudgetLimit(itemToEdit.id, newLimit)
+                                    editingBudget = itemToEdit.copy(limitPaise = newLimit)
                                 },
                             shape = RoundedCornerShape(14.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -413,21 +446,25 @@ fun BudgetsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
-                    onClick = {
-                        onShowMessage("Updated ${itemToEdit.category} limit to ₹%,.0f".format(itemToEdit.limitPaise / 100.0))
-                        editingBudget = null
-                    },
-                    shape = RoundedCornerShape(18.dp),
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
                         .bouncyClickable(scaleDown = 0.94f) {
-                            onShowMessage("Updated ${itemToEdit.category} limit to ₹%,.0f".format(itemToEdit.limitPaise / 100.0))
+                            onShowMessage("Saved ${itemToEdit.category} limit: ₹%,.0f".format(itemToEdit.limitPaise / 100.0))
                             editingBudget = null
-                        }
+                        },
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.primary
                 ) {
-                    Text("Done", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Done",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
