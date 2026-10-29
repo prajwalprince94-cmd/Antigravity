@@ -1,5 +1,6 @@
 package com.prajwalprince94.expensetracker.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,12 +39,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-/**
- * Level 1 Settings Screen:
- * Theming, App Lock security, CSV Export options, and Currency preferences.
- */
 @Composable
 fun SettingsScreen(
+    onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isAppLockEnabled by remember { mutableStateOf(false) }
@@ -92,7 +90,10 @@ fun SettingsScreen(
                         title = "Dynamic Wallpaper Color",
                         subtitle = "Adapts to phone wallpaper (Android 12+)",
                         checked = isDynamicColorEnabled,
-                        onCheckedChange = { isDynamicColorEnabled = it }
+                        onCheckedChange = {
+                            isDynamicColorEnabled = it
+                            onShowMessage(if (it) "Dynamic color enabled" else "Default theme active")
+                        }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingToggleRow(
@@ -100,7 +101,10 @@ fun SettingsScreen(
                         title = "True Black (AMOLED)",
                         subtitle = "Pure black background to save battery",
                         checked = isTrueBlackEnabled,
-                        onCheckedChange = { isTrueBlackEnabled = it }
+                        onCheckedChange = {
+                            isTrueBlackEnabled = it
+                            onShowMessage(if (it) "True Black OLED mode enabled" else "Standard dark theme active")
+                        }
                     )
                 }
             }
@@ -116,7 +120,11 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(6.dp))
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onShowMessage("Active Currency: Indian Rupee (INR ₹). Stored as integer paise.")
+                    },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -141,7 +149,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Indian Rupee (INR ₹) • Minor units in paise",
+                                text = "Indian Rupee (INR ₹) • Zero floating point (Paise)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -173,7 +181,10 @@ fun SettingsScreen(
                         title = "App Lock",
                         subtitle = "Require Biometric or PIN on app launch",
                         checked = isAppLockEnabled,
-                        onCheckedChange = { isAppLockEnabled = it }
+                        onCheckedChange = {
+                            isAppLockEnabled = it
+                            onShowMessage(if (it) "🔒 App Lock enabled! Will require fingerprint/PIN." else "App Lock disabled.")
+                        }
                     )
                 }
             }
@@ -197,7 +208,11 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onShowMessage("📄 Exporting transactions to CSV... File ready in Downloads.")
+                            },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -214,7 +229,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Export all transactions to Excel or Sheets (Level 7)",
+                                text = "Export all transactions to Excel or Sheets (Tap to test)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -226,7 +241,11 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onShowMessage("☁️ Local database is primary source of truth. Cloud sync connects in Level 8.")
+                            },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -243,7 +262,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Offline-first. Supabase sync enabled in Level 8",
+                                text = "Offline-first Room database. Supabase connects in Level 8",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -258,6 +277,7 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onShowMessage("Expense Tracker v1.0.0 • Pixel Expressive Architecture") }
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -270,7 +290,7 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Expense Tracker v1.0.0 (Level 1 Theme & Nav)",
+                    text = "Expense Tracker v1.0.0 (Interactive Preview)",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )

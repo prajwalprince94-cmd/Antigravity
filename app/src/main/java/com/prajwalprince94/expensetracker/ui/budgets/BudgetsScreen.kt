@@ -1,5 +1,6 @@
 package com.prajwalprince94.expensetracker.ui.budgets
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,11 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,25 +37,25 @@ import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
 
 private data class BudgetPreviewItem(
     val category: String,
-    val spent: String,
-    val limit: String,
-    val progress: Float,
+    val spentPaise: Long,
+    val limitPaise: Long,
     val progressColor: Color
-)
+) {
+    val spentFormatted: String get() = "₹%,.0f".format(spentPaise / 100.0)
+    val limitFormatted: String get() = "₹%,.0f".format(limitPaise / 100.0)
+    val progress: Float get() = (spentPaise.toFloat() / limitPaise.toFloat()).coerceAtLeast(0f)
+}
 
-/**
- * Level 1 Budgets Screen:
- * Overall monthly budget with color-coded threshold progress bars (Green -> Orange -> Red).
- */
 @Composable
 fun BudgetsScreen(
+    onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val categoryBudgets = listOf(
-        BudgetPreviewItem("Food & Dining", "₹6,200", "₹10,000", 0.62f, IncomeGreen),
-        BudgetPreviewItem("Groceries", "₹7,800", "₹9,000", 0.86f, Color(0xFFE65100)), // Orange warning
-        BudgetPreviewItem("Shopping & Leisure", "₹5,400", "₹5,000", 1.08f, ExpenseRed), // Over budget
-        BudgetPreviewItem("Utilities & Bills", "₹3,100", "₹6,000", 0.51f, IncomeGreen)
+        BudgetPreviewItem("Food & Dining", 620000L, 1000000L, IncomeGreen),
+        BudgetPreviewItem("Groceries", 780000L, 900000L, Color(0xFFE65100)), // Orange warning
+        BudgetPreviewItem("Shopping & Leisure", 540000L, 500000L, ExpenseRed), // Over budget
+        BudgetPreviewItem("Utilities & Bills", 310000L, 600000L, IncomeGreen)
     )
 
     LazyColumn(
@@ -59,22 +66,41 @@ fun BudgetsScreen(
     ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Monthly Budgets",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "October 2026",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Monthly Budgets",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "October 2026",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Button(
+                    onClick = { onShowMessage("Custom Budget limits unlock in Level 5 with Room persistence!") },
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Budget")
+                }
+            }
         }
 
         // Overall Monthly Budget Hero Card
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onShowMessage("Total budget: ₹35,000. Remaining: ₹12,500. On track!") },
                 shape = RoundedCornerShape(26.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -158,7 +184,7 @@ fun BudgetsScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "64% of ₹35,000 monthly target spent",
+                        text = "64% of ₹35,000 monthly target spent (Tap to inspect)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -174,10 +200,19 @@ fun BudgetsScreen(
             )
         }
 
-        // Category Budget Cards
+        // Category Budget Cards with interactive tap
         items(categoryBudgets) { item ->
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val remaining = (item.limitPaise - item.spentPaise) / 100.0
+                        if (remaining >= 0) {
+                            onShowMessage("${item.category}: ₹%,.0f remaining in budget".format(remaining))
+                        } else {
+                            onShowMessage("⚠️ ${item.category}: Exceeded by ₹%,.0f!".format(-remaining))
+                        }
+                    },
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -197,7 +232,7 @@ fun BudgetsScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${item.spent} / ${item.limit}",
+                            text = "${item.spentFormatted} / ${item.limitFormatted}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = item.progressColor
