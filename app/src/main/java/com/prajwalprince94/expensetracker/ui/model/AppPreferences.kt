@@ -4,11 +4,11 @@ enum class ThemeMode {
     SYSTEM, LIGHT, DARK
 }
 
-enum class ColorStyle {
-    TONAL_SPOT,
-    VIBRANT,
-    EXPRESSIVE,
-    MONOCHROME
+enum class ColorStyle(val displayName: String) {
+    TONAL_SPOT("Tonal Spot"),
+    VIBRANT("Vibrant"),
+    EXPRESSIVE("Expressive"),
+    MONOCHROME("Monochrome")
 }
 
 enum class AppPalette(val displayName: String) {

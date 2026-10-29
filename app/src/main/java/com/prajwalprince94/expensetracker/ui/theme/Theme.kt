@@ -3,11 +3,16 @@ package com.prajwalprince94.expensetracker.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -52,11 +57,11 @@ fun ExpenseTrackerTheme(
         colorScheme = finalColorScheme,
         typography = Typography
     ) {
-        androidx.compose.runtime.CompositionLocalProvider(
-            androidx.compose.material3.LocalContentColor provides finalColorScheme.onBackground
+        CompositionLocalProvider(
+            LocalContentColor provides finalColorScheme.onBackground
         ) {
-            androidx.compose.material3.Surface(
-                modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+            Surface(
+                modifier = Modifier.fillMaxSize(),
                 color = finalColorScheme.background,
                 contentColor = finalColorScheme.onBackground,
                 content = content

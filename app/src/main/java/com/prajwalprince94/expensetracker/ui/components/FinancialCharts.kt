@@ -56,7 +56,7 @@ fun SpendingTrendLineChart(
         days.map { date ->
             val dayStr = date.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault()))
             val totalForDay = expenses
-                .filter { it.date == date.toString() }
+                .filter { it.formattedDate.contains(dayStr, ignoreCase = true) }
                 .sumOf { it.amountPaise }
                 .toFloat() / 100f
             // If empty mock baseline to give vivid visual wave
