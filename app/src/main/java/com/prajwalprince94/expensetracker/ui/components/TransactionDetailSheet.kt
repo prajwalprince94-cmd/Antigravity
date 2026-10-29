@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -73,7 +72,6 @@ fun TransactionDetailSheet(
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Category Icon Badge with pulse
             Box(
                 modifier = Modifier
                     .size(68.dp)
@@ -97,10 +95,16 @@ fun TransactionDetailSheet(
                 fontWeight = FontWeight.Bold
             )
 
+            Spacer(modifier = Modifier.height(4.dp))
+
+            StatusPill(label = transaction.type.name, color = tintColor)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = transaction.formattedAmount,
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 34.sp,
+                    fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold
                 ),
                 color = tintColor
@@ -108,31 +112,28 @@ fun TransactionDetailSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Details Container
-            Surface(
+            // Details GlassCard
+            GlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer
+                contentPadding = 18.dp
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    DetailRow(label = "Category", value = transaction.category)
+                DetailRow(label = "Category", value = transaction.category)
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                    modifier = Modifier.padding(vertical = 10.dp)
+                )
+                DetailRow(label = "Account", value = transaction.account)
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                    modifier = Modifier.padding(vertical = 10.dp)
+                )
+                DetailRow(label = "Date & Time", value = transaction.formattedDate)
+                if (transaction.note.isNotBlank()) {
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
                         modifier = Modifier.padding(vertical = 10.dp)
                     )
-                    DetailRow(label = "Account", value = transaction.account)
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-                        modifier = Modifier.padding(vertical = 10.dp)
-                    )
-                    DetailRow(label = "Date & Time", value = transaction.formattedDate)
-                    if (transaction.note.isNotBlank()) {
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-                            modifier = Modifier.padding(vertical = 10.dp)
-                        )
-                        DetailRow(label = "Note", value = transaction.note)
-                    }
+                    DetailRow(label = "Remark / Note", value = transaction.note)
                 }
             }
 

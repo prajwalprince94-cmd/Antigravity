@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +39,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.ui.components.GlassCard
+import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bob
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
@@ -64,7 +64,6 @@ fun TransactionsScreen(
 
     val filterOptions = listOf("All", "Expenses", "Income", "Transfers")
 
-    // Real-time dynamic filtering
     val filteredList = transactions.filter { txn ->
         val matchesSearch = searchQuery.isBlank() ||
                 txn.title.contains(searchQuery, ignoreCase = true) ||
@@ -98,11 +97,11 @@ fun TransactionsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Smartphone Search Box with working clear button
+        // Search Field with hairline glass appearance
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search transactions, notes...") },
+            placeholder = { Text("Search transactions, remarks...") },
             leadingIcon = {
                 Icon(
                     Icons.Default.Search,
@@ -135,7 +134,7 @@ fun TransactionsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Horizontal filter chips with Stride bouncy clicks
+        // Horizontal filter chips
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
@@ -164,7 +163,6 @@ fun TransactionsScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Dynamic filtered transaction list
         if (filteredList.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -196,34 +194,29 @@ fun TransactionsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filteredList) { txn ->
-                    Card(
+                    val bgColor = when (txn.type) {
+                        TransactionType.TRANSFER -> TransferBlueLight
+                        TransactionType.EXPENSE -> ExpenseRedLight
+                        TransactionType.INCOME -> IncomeGreenLight
+                    }
+                    val tintColor = when (txn.type) {
+                        TransactionType.TRANSFER -> TransferBlue
+                        TransactionType.EXPENSE -> ExpenseRed
+                        TransactionType.INCOME -> IncomeGreen
+                    }
+
+                    GlassCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .bouncyClickable(scaleDown = 0.95f) {
                                 onSelectTransaction(txn)
                             },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        )
+                        contentPadding = 14.dp
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val bgColor = when (txn.type) {
-                                TransactionType.TRANSFER -> TransferBlueLight
-                                TransactionType.EXPENSE -> ExpenseRedLight
-                                TransactionType.INCOME -> IncomeGreenLight
-                            }
-                            val tintColor = when (txn.type) {
-                                TransactionType.TRANSFER -> TransferBlue
-                                TransactionType.EXPENSE -> ExpenseRed
-                                TransactionType.INCOME -> IncomeGreen
-                            }
-
                             Box(
                                 modifier = Modifier
                                     .size(44.dp)
@@ -247,11 +240,18 @@ fun TransactionsScreen(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text(
-                                    text = "${txn.category} • ${txn.account}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    StatusPill(
+                                        label = txn.category,
+                                        color = tintColor
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = txn.account,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
 
                             Column(horizontalAlignment = Alignment.End) {
@@ -259,11 +259,7 @@ fun TransactionsScreen(
                                     text = txn.formattedAmount,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = when (txn.type) {
-                                        TransactionType.TRANSFER -> TransferBlue
-                                        TransactionType.EXPENSE -> ExpenseRed
-                                        TransactionType.INCOME -> IncomeGreen
-                                    }
+                                    color = tintColor
                                 )
                                 Text(
                                     text = txn.formattedDate,

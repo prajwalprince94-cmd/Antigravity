@@ -23,5 +23,7 @@ data class AppPreferences(
     val dynamicColor: Boolean = true,
     val amoled: Boolean = false,
     val colorStyle: ColorStyle = ColorStyle.EXPRESSIVE,
-    val palette: AppPalette = AppPalette.EMERALD
+    val palette: AppPalette = AppPalette.EMERALD,
+    val ambientAurora: Boolean = true,
+    val reduceMotion: Boolean = false
 )

@@ -18,16 +18,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.CloudSync
-import androidx.compose.material.icons.filled.CurrencyRupee
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +46,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.ui.components.GlassCard
+import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.model.AppPalette
@@ -87,27 +88,16 @@ fun SettingsScreen(
 
         // 1. Theme Mode (System / Light / Dark)
         item {
-            Text(
-                text = "Theme Mode",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.entrance(1)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Card(
+            SectionHeader(title = "Theme Mode", modifier = Modifier.entrance(1))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(1),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                contentPadding = 8.dp
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ThemeMode.values().forEach { mode ->
@@ -139,14 +129,8 @@ fun SettingsScreen(
 
         // 2. Palette Selector (Emerald, Ocean, Crimson, Amethyst)
         item {
-            Text(
-                text = "Accent Palette",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.entrance(2)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
+            SectionHeader(title = "Accent Palette", modifier = Modifier.entrance(2))
+            Spacer(modifier = Modifier.height(4.dp))
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -194,16 +178,10 @@ fun SettingsScreen(
             }
         }
 
-        // 3. Color Style Selector (Vibrant, Expressive, Tonal, Monochrome)
+        // 3. ColorBlendr Style
         item {
-            Text(
-                text = "ColorBlendr Style",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.entrance(3)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
+            SectionHeader(title = "Color Style", modifier = Modifier.entrance(3))
+            Spacer(modifier = Modifier.height(4.dp))
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -232,26 +210,28 @@ fun SettingsScreen(
             }
         }
 
-        // 4. Appearance & AMOLED Switches
+        // 4. Living Aurora & Display
         item {
-            Text(
-                text = "Display & Battery",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.entrance(4)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Card(
+            SectionHeader(title = "Display & Ambient", modifier = Modifier.entrance(4))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(4),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                contentPadding = 8.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                    SettingToggleRow(
+                        icon = Icons.Default.AutoAwesome,
+                        title = "Living Aurora Backdrop",
+                        subtitle = "Range-inspired ambient blooms drifting in background",
+                        checked = preferences.ambientAurora,
+                        onCheckedChange = {
+                            onUpdatePreferences(preferences.copy(ambientAurora = it))
+                            onShowMessage(if (it) "Living Aurora enabled" else "Flat background active")
+                        }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingToggleRow(
                         icon = Icons.Default.Palette,
                         title = "Material You Dynamic Color",
@@ -262,7 +242,7 @@ fun SettingsScreen(
                             onShowMessage(if (it) "Dynamic color enabled" else "Palette color active")
                         }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingToggleRow(
                         icon = Icons.Default.DarkMode,
                         title = "Pure Black AMOLED",
@@ -273,30 +253,32 @@ fun SettingsScreen(
                             onShowMessage(if (it) "AMOLED pure black enabled" else "Standard dark theme active")
                         }
                     )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                    SettingToggleRow(
+                        icon = Icons.Default.MotionPhotosOff,
+                        title = "Reduce Motion",
+                        subtitle = "Disables ambient canvas animations for power saving",
+                        checked = preferences.reduceMotion,
+                        onCheckedChange = {
+                            onUpdatePreferences(preferences.copy(reduceMotion = it))
+                            onShowMessage(if (it) "Motion reduced" else "Full motion enabled")
+                        }
+                    )
                 }
             }
         }
 
         // 5. Security & Privacy
         item {
-            Text(
-                text = "Security & Privacy",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.entrance(5)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Card(
+            SectionHeader(title = "Security & Privacy", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(5),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                contentPadding = 8.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                     SettingToggleRow(
                         icon = Icons.Default.Fingerprint,
                         title = "Biometric Lock",
@@ -313,31 +295,22 @@ fun SettingsScreen(
 
         // 6. Data & Cloud Sync
         item {
-            Text(
-                text = "Data Management",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.entrance(6)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Card(
+            SectionHeader(title = "Data Management", modifier = Modifier.entrance(6))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(6),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                contentPadding = 8.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                     SettingActionRow(
                         icon = Icons.Default.FileDownload,
                         title = "Export Data (CSV / JSON)",
                         subtitle = "Export transaction ledger to local storage",
                         onClick = { onShowMessage("Exported 10 transactions to Downloads/expenses.csv") }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingActionRow(
                         icon = Icons.Default.CloudSync,
                         title = "Supabase Cloud Sync",
@@ -350,24 +323,16 @@ fun SettingsScreen(
 
         // 7. About App
         item {
-            Card(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(7),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                )
+                contentPadding = 16.dp
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
@@ -382,12 +347,12 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = "Expense Tracker v1.1",
+                            text = "Expense Tracker v1.2",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Stride-inspired motion • Offline first • Paise precision",
+                            text = "Range & Stride UI/UX • Poppins Font • Aurora Blooms",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -413,7 +378,7 @@ private fun SettingToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -441,7 +406,7 @@ private fun SettingToggleRow(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 11.sp
             )
         }
         Switch(
@@ -462,7 +427,7 @@ private fun SettingActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .bouncyClickable(scaleDown = 0.96f, onClick = onClick)
-            .padding(vertical = 12.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -490,7 +455,7 @@ private fun SettingActionRow(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 11.sp
             )
         }
     }

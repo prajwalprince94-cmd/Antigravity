@@ -27,8 +27,6 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,10 +42,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
+import com.prajwalprince94.expensetracker.ui.components.GlassCard
+import com.prajwalprince94.expensetracker.ui.components.SectionHeader
+import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
+import com.prajwalprince94.expensetracker.ui.components.glow
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.theme.CardShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
@@ -74,7 +77,6 @@ fun HomeScreen(
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Dynamic calculations from current transactions
     val totalIncomePaise = transactions
         .filter { it.type == TransactionType.INCOME }
         .sumOf { it.amountPaise }
@@ -97,7 +99,7 @@ fun HomeScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Smartphone Top Header with Stride-inspired Entrance
+        // 1. Top Header
         item {
             Spacer(modifier = Modifier.height(6.dp))
             Row(
@@ -139,130 +141,125 @@ fun HomeScreen(
             }
         }
 
-        // 2. Hero Net Balance Card with Stride-inspired AnimatedRupeeTicker
+        // 2. Hero Net Balance GlassCard with Soft Glow & Rolling Odometer
         item {
-            Card(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .glow(MaterialTheme.colorScheme.primaryContainer, radius = 90.dp, alpha = 0.3f)
                     .entrance(1),
-                shape = RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentPadding = 22.dp
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp)
+                Text(
+                    text = "TOTAL NET BALANCE",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                AnimatedRupeeTicker(
+                    paise = netBalancePaise,
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontWeight = FontWeight.ExtraBold
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Income vs Expense Pills with Stride/Range bouncy clicks
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Total Net Balance",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Odometer-style rolling numerals when balance changes!
-                    AnimatedRupeeTicker(
-                        paise = netBalancePaise,
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.ExtraBold
-                        ),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Monthly Income vs Expense Pills with Stride bouncy clicks
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    // Income Pill
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .bouncyClickable(scaleDown = 0.94f) {
+                                onOpenQuickAdd(TransactionType.INCOME)
+                            },
+                        shape = RoundedCornerShape(20.dp),
+                        color = IncomeGreenLight.copy(alpha = 0.95f)
                     ) {
-                        // Income Pill
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .bouncyClickable(scaleDown = 0.94f) {
-                                    onOpenQuickAdd(TransactionType.INCOME)
-                                },
-                            shape = RoundedCornerShape(20.dp),
-                            color = IncomeGreenLight.copy(alpha = 0.95f)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(IncomeGreen),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(IncomeGreen),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDownward,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(text = "Income", fontSize = 11.sp, color = IncomeGreen, fontWeight = FontWeight.Medium)
-                                    AnimatedRupeeTicker(
-                                        paise = totalIncomePaise,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp
-                                        ),
-                                        color = IncomeGreen,
-                                        prefix = "+"
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDownward,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(text = "Income", fontSize = 11.sp, color = IncomeGreen, fontWeight = FontWeight.Bold)
+                                AnimatedRupeeTicker(
+                                    paise = totalIncomePaise,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    ),
+                                    color = IncomeGreen,
+                                    prefix = "+"
+                                )
                             }
                         }
+                    }
 
-                        // Expense Pill
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .bouncyClickable(scaleDown = 0.94f) {
-                                    onOpenQuickAdd(TransactionType.EXPENSE)
-                                },
-                            shape = RoundedCornerShape(20.dp),
-                            color = ExpenseRedLight.copy(alpha = 0.95f)
+                    // Expense Pill
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .bouncyClickable(scaleDown = 0.94f) {
+                                onOpenQuickAdd(TransactionType.EXPENSE)
+                            },
+                        shape = RoundedCornerShape(20.dp),
+                        color = ExpenseRedLight.copy(alpha = 0.95f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(ExpenseRed),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(ExpenseRed),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowUpward,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(text = "Expense", fontSize = 11.sp, color = ExpenseRed, fontWeight = FontWeight.Medium)
-                                    AnimatedRupeeTicker(
-                                        paise = totalExpensePaise,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp
-                                        ),
-                                        color = ExpenseRed,
-                                        prefix = "-"
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.ArrowUpward,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(text = "Expense", fontSize = 11.sp, color = ExpenseRed, fontWeight = FontWeight.Bold)
+                                AnimatedRupeeTicker(
+                                    paise = totalExpensePaise,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    ),
+                                    color = ExpenseRed,
+                                    prefix = "-"
+                                )
                             }
                         }
                     }
@@ -270,7 +267,7 @@ fun HomeScreen(
             }
         }
 
-        // 3. Quick Action Thumb Buttons with Bouncy Feedback
+        // 3. Quick Action Buttons
         item {
             Row(
                 modifier = Modifier
@@ -316,91 +313,74 @@ fun HomeScreen(
             }
         }
 
-        // 4. Accounts Section
+        // 4. Accounts & Wallets Carousel with GlassCard
         item {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(3)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Accounts & Wallets",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "3 Linked",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                SectionHeader(
+                    title = "Accounts & Wallets",
+                    trailing = {
+                        Text(
+                            text = "3 Linked",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(accounts) { acc ->
-                        Card(
+                        GlassCard(
                             modifier = Modifier
-                                .width(180.dp)
+                                .width(185.dp)
                                 .bouncyClickable(scaleDown = 0.94f) {
                                     onShowMessage("${acc.name} selected: ${acc.balance}")
                                 },
-                            shape = RoundedCornerShape(22.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
+                            contentPadding = 16.dp
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primaryContainer),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = acc.icon,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = acc.name,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1
+                                    Icon(
+                                        imageVector = acc.icon,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = acc.type,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
-                                )
-                                Text(
-                                    text = acc.balance,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    text = acc.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text(
+                                text = acc.type,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                            Text(
+                                text = acc.balance,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
@@ -409,61 +389,49 @@ fun HomeScreen(
 
         // 5. Recent Transactions Header with "See All"
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .entrance(4),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Recent Transactions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "See All (${transactions.size})",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
-                        onNavigateToTransactions()
-                    }
-                )
-            }
+            SectionHeader(
+                title = "Recent Transactions",
+                trailing = {
+                    Text(
+                        text = "See All (${transactions.size})",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                            onNavigateToTransactions()
+                        }
+                    )
+                },
+                modifier = Modifier.entrance(4)
+            )
         }
 
-        // 6. Recent Transaction Items (Top 5) with Bouncy Tap Action
+        // 6. Recent Transaction Items (Top 5) with GlassCard & StatusPill
         val recentList = transactions.take(5)
         items(recentList) { txn ->
-            Card(
+            val tintColor = when (txn.type) {
+                TransactionType.TRANSFER -> TransferBlue
+                TransactionType.EXPENSE -> ExpenseRed
+                TransactionType.INCOME -> IncomeGreen
+            }
+            val bgColor = when (txn.type) {
+                TransactionType.TRANSFER -> TransferBlueLight
+                TransactionType.EXPENSE -> ExpenseRedLight
+                TransactionType.INCOME -> IncomeGreenLight
+            }
+
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .bouncyClickable(scaleDown = 0.95f) {
                         onSelectTransaction(txn)
                     },
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                contentPadding = 14.dp
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val bgColor = when (txn.type) {
-                        TransactionType.TRANSFER -> TransferBlueLight
-                        TransactionType.EXPENSE -> ExpenseRedLight
-                        TransactionType.INCOME -> IncomeGreenLight
-                    }
-                    val tintColor = when (txn.type) {
-                        TransactionType.TRANSFER -> TransferBlue
-                        TransactionType.EXPENSE -> ExpenseRed
-                        TransactionType.INCOME -> IncomeGreen
-                    }
-
                     Box(
                         modifier = Modifier
                             .size(44.dp)
@@ -487,29 +455,31 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = "${txn.category} • ${txn.formattedDate}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            StatusPill(
+                                label = txn.type.name,
+                                color = tintColor
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${txn.category} • ${txn.formattedDate}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Text(
                         text = txn.formattedAmount,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = when (txn.type) {
-                            TransactionType.TRANSFER -> TransferBlue
-                            TransactionType.EXPENSE -> ExpenseRed
-                            TransactionType.INCOME -> IncomeGreen
-                        }
+                        color = tintColor
                     )
                 }
             }
         }
 
         item {
-            // Padding for floating navigation bar
             Spacer(modifier = Modifier.height(88.dp))
         }
     }
@@ -526,7 +496,7 @@ private fun QuickActionButton(
 ) {
     Surface(
         modifier = modifier
-            .height(50.dp)
+            .height(52.dp)
             .bouncyClickable(scaleDown = 0.9f, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = containerColor

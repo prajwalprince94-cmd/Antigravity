@@ -1,0 +1,120 @@
+package com.prajwalprince94.expensetracker.ui.components
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
+
+/**
+ * The living backdrop inspired by NikhilKain/Range:
+ * Slow ambient aurora blooms drifting against a soft background with faint twinkling starfield.
+ * Quantized at 10-15 fps via [ambientPhase] for zero battery impact.
+ */
+@Composable
+fun AuroraBackground(
+    modifier: Modifier = Modifier,
+    intensity: Float = 0.85f,
+    animated: Boolean = true,
+    content: @Composable BoxScope.() -> Unit = {}
+) {
+    val phase = if (animated) ambientPhase(durationMs = 40_000, steps = 180, label = "aurora") else 0.22f
+    val dark = isSystemInDarkTheme()
+
+    val stars = remember {
+        val rnd = Random(42)
+        List(36) {
+            Triple(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat() * 0.7f + 0.3f)
+        }
+    }
+
+    val base = MaterialTheme.colorScheme.background
+    val bloomA = MaterialTheme.colorScheme.primary
+    val bloomB = MaterialTheme.colorScheme.secondary
+
+    Box(modifier = modifier.background(base)) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawAurora(phase, intensity * if (dark) 1f else 0.5f, bloomA, bloomB, base, dark)
+            if (dark) {
+                drawStars(stars, phase)
+            }
+        }
+        content()
+    }
+}
+
+private fun DrawScope.drawAurora(
+    phase: Float,
+    intensity: Float,
+    bloomA: Color,
+    bloomB: Color,
+    base: Color,
+    dark: Boolean
+) {
+    val w = size.width
+    val h = size.height
+    val a1 = phase * 2f * Math.PI.toFloat()
+    val a2 = a1 * 0.65f + 1.2f
+
+    // Primary Bloom
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                bloomA.copy(alpha = 0.22f * intensity),
+                bloomA.copy(alpha = 0.08f * intensity),
+                Color.Transparent
+            ),
+            center = Offset(w * (0.22f + 0.12f * cos(a1)), h * (0.16f + 0.05f * sin(a1))),
+            radius = w * 0.95f
+        ),
+        radius = w * 0.95f,
+        center = Offset(w * (0.22f + 0.12f * cos(a1)), h * (0.16f + 0.05f * sin(a1)))
+    )
+
+    // Secondary Bloom
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                bloomB.copy(alpha = 0.16f * intensity),
+                bloomB.copy(alpha = 0.06f * intensity),
+                Color.Transparent
+            ),
+            center = Offset(w * (0.84f + 0.08f * sin(a2)), h * (0.32f + 0.08f * cos(a2))),
+            radius = w * 0.8f
+        ),
+        radius = w * 0.8f,
+        center = Offset(w * (0.84f + 0.08f * sin(a2)), h * (0.32f + 0.08f * cos(a2)))
+    )
+
+    // Smooth gradient fade toward the bottom to maintain foreground readability
+    drawRect(
+        brush = Brush.verticalGradient(
+            0f to Color.Transparent,
+            0.55f to base.copy(alpha = if (dark) 0.65f else 0.8f),
+            1f to base
+        )
+    )
+}
+
+private fun DrawScope.drawStars(stars: List<Triple<Float, Float, Float>>, phase: Float) {
+    stars.forEachIndexed { i, (x, y, seed) ->
+        val twinkle = 0.35f + 0.65f * ((sin(phase * 6.28f * (0.4f + seed) + i) + 1f) / 2f)
+        drawCircle(
+            color = Color.White.copy(alpha = 0.05f + 0.15f * twinkle * seed),
+            radius = (0.7f + seed * 1.4f),
+            center = Offset(x * size.width, y * size.height * 0.72f)
+        )
+    }
+}

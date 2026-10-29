@@ -4,7 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,11 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.navigation.Screen
 
 /**
- * Floating Pill Bottom Navigation Bar with Stride-inspired bouncy interactions.
- * - Floating pill design elevated from bottom screen edge
- * - Respects system navigation bar insets so it never overlaps gesture handles
- * - Generous touch targets (min 48dp) for comfortable one-handed thumb interaction
- * - Stride bouncy tactile feedback on tab selection
+ * Floating Pill Bottom Navigation Bar with Range GlassCard & Stride bouncy interactions.
  */
 @Composable
 fun FloatingBottomNavBar(
@@ -46,6 +46,9 @@ fun FloatingBottomNavBar(
     onNavigate: (Screen) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
+    val navShape = RoundedCornerShape(28.dp)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -58,12 +61,30 @@ fun FloatingBottomNavBar(
                 .fillMaxWidth()
                 .height(68.dp)
                 .shadow(
-                    elevation = 10.dp,
-                    shape = RoundedCornerShape(28.dp),
+                    elevation = 12.dp,
+                    shape = navShape,
                     ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                )
+                .then(
+                    if (isDark) {
+                        Modifier.border(
+                            BorderStroke(
+                                1.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.8f),
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                                    )
+                                )
+                            ),
+                            navShape
+                        )
+                    } else {
+                        Modifier
+                    }
                 ),
-            shape = RoundedCornerShape(28.dp),
+            shape = navShape,
             color = MaterialTheme.colorScheme.surfaceContainerHighest,
             tonalElevation = 6.dp
         ) {
@@ -134,7 +155,6 @@ private fun FloatingNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Active indicator pill
         Box(
             modifier = Modifier
                 .width(pillWidth)
