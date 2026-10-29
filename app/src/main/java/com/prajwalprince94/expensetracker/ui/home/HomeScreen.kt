@@ -85,6 +85,8 @@ fun HomeScreen(
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
+
     val totalIncomePaise = transactions
         .filter { it.type == TransactionType.INCOME }
         .sumOf { it.amountPaise }
@@ -154,7 +156,6 @@ fun HomeScreen(
 
         // 2. Hero Net Balance GlassCard with Soft Glow & Rolling Odometer
         item {
-            val isDark = isSystemInDarkTheme()
             val incomePillBg = if (isDark) Color(0xFF10B981).copy(alpha = 0.16f) else IncomeGreenLight
             val incomePillText = if (isDark) IncomeGreenDark else Color(0xFF059669)
             val expensePillBg = if (isDark) Color(0xFFEF4444).copy(alpha = 0.16f) else ExpenseRedLight
@@ -427,10 +428,9 @@ fun HomeScreen(
 
         // 6. Recent Transaction Items (Top 5) with GlassCard & StatusPill
         val recentList = transactions.take(5)
-        val isDarkTheme = isSystemInDarkTheme()
         items(recentList) { txn ->
-            val tintColor = getFinancialColor(txn.type, isDarkTheme)
-            val bgColor = getFinancialContainerColor(txn.type, isDarkTheme)
+            val tintColor = getFinancialColor(txn.type, isDark)
+            val bgColor = getFinancialContainerColor(txn.type, isDark)
 
             GlassCard(
                 modifier = Modifier

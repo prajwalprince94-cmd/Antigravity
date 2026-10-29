@@ -57,6 +57,7 @@ fun TransactionsScreen(
     onSelectTransaction: (TransactionItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
 
@@ -186,7 +187,6 @@ fun TransactionsScreen(
                 }
             }
         } else {
-            val isDarkTheme = isSystemInDarkTheme()
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -194,8 +194,8 @@ fun TransactionsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filteredList) { txn ->
-                    val bgColor = getFinancialContainerColor(txn.type, isDarkTheme)
-                    val tintColor = getFinancialColor(txn.type, isDarkTheme)
+                    val bgColor = getFinancialContainerColor(txn.type, isDark)
+                    val tintColor = getFinancialColor(txn.type, isDark)
 
                     GlassCard(
                         modifier = Modifier
