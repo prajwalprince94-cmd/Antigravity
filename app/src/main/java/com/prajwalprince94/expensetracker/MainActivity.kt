@@ -33,6 +33,7 @@ import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
 import com.prajwalprince94.expensetracker.ui.components.QuickAddTransactionSheet
 import com.prajwalprince94.expensetracker.ui.components.TransactionDetailSheet
 import com.prajwalprince94.expensetracker.ui.home.HomeScreen
+import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
@@ -45,8 +46,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ExpenseTrackerTheme {
-                MainApp()
+            var preferences by remember { mutableStateOf(AppPreferences()) }
+
+            ExpenseTrackerTheme(preferences = preferences) {
+                MainApp(
+                    preferences = preferences,
+                    onUpdatePreferences = { preferences = it }
+                )
             }
         }
     }
@@ -54,7 +60,10 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApp() {
+fun MainApp(
+    preferences: AppPreferences,
+    onUpdatePreferences: (AppPreferences) -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -149,6 +158,8 @@ fun MainApp() {
 
                     composable(Screen.Settings.route) {
                         SettingsScreen(
+                            preferences = preferences,
+                            onUpdatePreferences = onUpdatePreferences,
                             onShowMessage = { msg ->
                                 scope.launch { snackbarHostState.showSnackbar(msg) }
                             }

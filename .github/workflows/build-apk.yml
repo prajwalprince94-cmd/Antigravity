@@ -40,28 +40,31 @@ jobs:
           if-no-files-found: error
 
       - name: Prepare APK for Release
-        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v1.1-stride-motion.apk
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
 
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v1.0-preview"
-          name: "Expense Tracker Preview (Level 1)"
+          tag_name: "v1.1-preview"
+          name: "Expense Tracker Preview v1.1 (Stride Motion & Interactivity)"
           body: |
-            ### 📱 Expense Tracker Preview Build
-            - **Level:** Level 1 (Theme + 4-Screen Floating Navigation Skeleton)
-            - **Design:** Pixel-inspired Material 3 Expressive
+            ### 📱 Expense Tracker Preview Build v1.1
+            - **Enhancements:** Full UI/UX makeover inspired by `NikhilKain/stride`
+            - **Motion & Physics:** Stride `bouncyClickable` squash-and-spring haptics on cards, buttons, keypad, & tabs
+            - **Odometer Numbers:** `AnimatedRupeeTicker` rolling numerals for balances and currency entry
+            - **Expressive Theming:** ColorBlendr saturation/hue treatments, 4 palettes (Emerald, Ocean, Crimson, Amethyst), and pure-black AMOLED surface ladder
+            - **Full Interactivity:** Live theme toggles in Settings, interactive budget limit editor, real-time search and filters
             - **Target:** Android 8.0 (API 26) through Android 15 (API 35)
             
-            #### 📥 How to Install on your Phone:
-            1. Download `ExpenseTracker-Level1.apk` below under Assets.
-            2. Open the downloaded file on your Android phone.
-            3. If prompted, allow "Install unknown apps" for your browser.
-            4. Open **Expense Tracker** and test the 4-screen navigation!
+            #### 📥 Download & Install:
+            Download **`ExpenseTracker-v1.1-stride-motion.apk`** below under Assets.
           draft: false
           prerelease: true
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v1.1-stride-motion.apk
             app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

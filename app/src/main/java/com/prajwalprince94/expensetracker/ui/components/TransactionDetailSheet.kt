@@ -64,7 +64,7 @@ fun TransactionDetailSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -73,10 +73,10 @@ fun TransactionDetailSheet(
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Category Icon Badge
+            // Category Icon Badge with pulse
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(68.dp)
                     .clip(CircleShape)
                     .background(bgColor),
                 contentAlignment = Alignment.Center
@@ -85,11 +85,11 @@ fun TransactionDetailSheet(
                     imageVector = transaction.icon,
                     contentDescription = transaction.category,
                     tint = tintColor,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(34.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
                 text = transaction.title,
@@ -101,7 +101,7 @@ fun TransactionDetailSheet(
                 text = transaction.formattedAmount,
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 34.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold
                 ),
                 color = tintColor
             )
@@ -111,24 +111,24 @@ fun TransactionDetailSheet(
             // Details Container
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
+                shape = RoundedCornerShape(22.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(18.dp)) {
                     DetailRow(label = "Category", value = transaction.category)
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
                         modifier = Modifier.padding(vertical = 10.dp)
                     )
                     DetailRow(label = "Account", value = transaction.account)
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
                         modifier = Modifier.padding(vertical = 10.dp)
                     )
                     DetailRow(label = "Date & Time", value = transaction.formattedDate)
                     if (transaction.note.isNotBlank()) {
                         HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
                             modifier = Modifier.padding(vertical = 10.dp)
                         )
                         DetailRow(label = "Note", value = transaction.note)
@@ -138,21 +138,25 @@ fun TransactionDetailSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Action: Delete Transaction
+            // Action: Delete Transaction with Bouncy Click
             OutlinedButton(
                 onClick = {
                     onDelete(transaction.id)
                     onDismiss()
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = ExpenseRed),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(52.dp)
+                    .bouncyClickable(scaleDown = 0.94f) {
+                        onDelete(transaction.id)
+                        onDismiss()
+                    }
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Delete Transaction", fontWeight = FontWeight.SemiBold)
+                Text("Delete Transaction", fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(36.dp))
@@ -175,7 +179,7 @@ private fun DetailRow(label: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
     }
 }

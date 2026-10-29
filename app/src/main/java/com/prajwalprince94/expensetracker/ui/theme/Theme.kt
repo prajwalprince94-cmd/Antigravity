@@ -1,47 +1,55 @@
 package com.prajwalprince94.expensetracker.ui.theme
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-    background = TrueBlack,
-    surface = SurfaceDarkOled
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-)
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import com.prajwalprince94.expensetracker.ui.model.AppPreferences
+import com.prajwalprince94.expensetracker.ui.model.ThemeMode
 
 @Composable
 fun ExpenseTrackerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+ (Pixel / Material You)
-    dynamicColor: Boolean = true,
+    preferences: AppPreferences = AppPreferences(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val darkTheme = when (preferences.themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+
+    val baseScheme = if (preferences.dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val context = LocalContext.current
+        val dyn = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        dyn.expressiveSurfaces(darkTheme)
+    } else {
+        val paletteScheme = getPaletteColorScheme(preferences.palette, darkTheme)
+        paletteScheme.expressiveSurfaces(darkTheme)
+    }
+
+    val finalColorScheme = baseScheme
+        .applyStyle(preferences.colorStyle)
+        .let { if (preferences.amoled && darkTheme) it.applyAmoled() else it }
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val activity = view.context as? Activity ?: return@SideEffect
+            val controller = WindowCompat.getInsetsController(activity.window, view)
+            controller.isAppearanceLightStatusBars = !darkTheme
+            controller.isAppearanceLightNavigationBars = !darkTheme
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = finalColorScheme,
         typography = Typography,
         content = content
     )

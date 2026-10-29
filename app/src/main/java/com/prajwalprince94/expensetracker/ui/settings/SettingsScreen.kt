@@ -1,7 +1,8 @@
 package com.prajwalprince94.expensetracker.ui.settings
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.CurrencyRupee
 import androidx.compose.material.icons.filled.DarkMode
@@ -26,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,18 +41,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
+import com.prajwalprince94.expensetracker.ui.components.entrance
+import com.prajwalprince94.expensetracker.ui.model.AppPalette
+import com.prajwalprince94.expensetracker.ui.model.AppPreferences
+import com.prajwalprince94.expensetracker.ui.model.ColorStyle
+import com.prajwalprince94.expensetracker.ui.model.ThemeMode
 
 @Composable
 fun SettingsScreen(
+    preferences: AppPreferences,
+    onUpdatePreferences: (AppPreferences) -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isAppLockEnabled by remember { mutableStateOf(false) }
-    var isTrueBlackEnabled by remember { mutableStateOf(false) }
-    var isDynamicColorEnabled by remember { mutableStateOf(true) }
 
     LazyColumn(
         modifier = modifier
@@ -55,251 +70,334 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Settings",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.entrance(0)
             )
             Text(
-                text = "Preferences & Privacy",
+                text = "Preferences, Theme & Security",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.entrance(0)
             )
         }
 
-        // Appearance & Theming Group
+        // 1. Theme Mode (System / Light / Dark)
         item {
             Text(
-                text = "Appearance",
+                text = "Theme Mode",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.entrance(1)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(1),
+                shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ThemeMode.values().forEach { mode ->
+                        val isSelected = preferences.themeMode == mode
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .bouncyClickable(scaleDown = 0.92f) {
+                                    onUpdatePreferences(preferences.copy(themeMode = mode))
+                                    onShowMessage("Theme set to ${mode.name.lowercase()}")
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = mode.name.lowercase().replaceFirstChar { it.uppercase() },
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Palette Selector (Emerald, Ocean, Crimson, Amethyst)
+        item {
+            Text(
+                text = "Accent Palette",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.entrance(2)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(2),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(AppPalette.values()) { palette ->
+                    val isSelected = preferences.palette == palette
+                    val swatchColor = when (palette) {
+                        AppPalette.EMERALD -> Color(0xFF006960)
+                        AppPalette.OCEAN -> Color(0xFF1B6088)
+                        AppPalette.CRIMSON -> Color(0xFF904A42)
+                        AppPalette.AMETHYST -> Color(0xFF6B538C)
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .bouncyClickable(scaleDown = 0.92f) {
+                                onUpdatePreferences(preferences.copy(palette = palette, dynamicColor = false))
+                                onShowMessage("${palette.displayName} palette activated")
+                            },
+                        shape = RoundedCornerShape(18.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                                    .background(swatchColor)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = palette.displayName,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Color Style Selector (Vibrant, Expressive, Tonal, Monochrome)
+        item {
+            Text(
+                text = "ColorBlendr Style",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.entrance(3)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(3),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(ColorStyle.values()) { style ->
+                    val isSelected = preferences.colorStyle == style
+                    Surface(
+                        modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
+                            onUpdatePreferences(preferences.copy(colorStyle = style))
+                            onShowMessage("${style.name} style applied")
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
+                    ) {
+                        Text(
+                            text = style.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                            color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // 4. Appearance & AMOLED Switches
+        item {
+            Text(
+                text = "Display & Battery",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.entrance(4)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(4),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                     SettingToggleRow(
                         icon = Icons.Default.Palette,
-                        title = "Dynamic Wallpaper Color",
+                        title = "Material You Dynamic Color",
                         subtitle = "Adapts to phone wallpaper (Android 12+)",
-                        checked = isDynamicColorEnabled,
+                        checked = preferences.dynamicColor,
                         onCheckedChange = {
-                            isDynamicColorEnabled = it
-                            onShowMessage(if (it) "Dynamic color enabled" else "Default theme active")
+                            onUpdatePreferences(preferences.copy(dynamicColor = it))
+                            onShowMessage(if (it) "Dynamic color enabled" else "Palette color active")
                         }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     SettingToggleRow(
                         icon = Icons.Default.DarkMode,
-                        title = "True Black (AMOLED)",
-                        subtitle = "Pure black background to save battery",
-                        checked = isTrueBlackEnabled,
+                        title = "Pure Black AMOLED",
+                        subtitle = "Saves battery on OLED displays with true black ladder",
+                        checked = preferences.amoled,
                         onCheckedChange = {
-                            isTrueBlackEnabled = it
-                            onShowMessage(if (it) "True Black OLED mode enabled" else "Standard dark theme active")
+                            onUpdatePreferences(preferences.copy(amoled = it))
+                            onShowMessage(if (it) "AMOLED pure black enabled" else "Standard dark theme active")
                         }
                     )
                 }
             }
         }
 
-        // Financial & Regional Settings
+        // 5. Security & Privacy
         item {
             Text(
-                text = "Currency & Locale",
+                text = "Security & Privacy",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.entrance(5)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        onShowMessage("Active Currency: Indian Rupee (INR ₹). Stored as integer paise.")
-                    },
-                shape = RoundedCornerShape(20.dp),
+                    .entrance(5),
+                shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CurrencyRupee,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Base Currency",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Indian Rupee (INR ₹) • Zero floating point (Paise)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Security Group
-        item {
-            Text(
-                text = "Security",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                     SettingToggleRow(
                         icon = Icons.Default.Fingerprint,
-                        title = "App Lock",
-                        subtitle = "Require Biometric or PIN on app launch",
+                        title = "Biometric Lock",
+                        subtitle = "Require Fingerprint / Face unlock to open app",
                         checked = isAppLockEnabled,
                         onCheckedChange = {
                             isAppLockEnabled = it
-                            onShowMessage(if (it) "🔒 App Lock enabled! Will require fingerprint/PIN." else "App Lock disabled.")
+                            onShowMessage(if (it) "Biometric Lock enabled" else "Biometric Lock disabled")
                         }
                     )
                 }
             }
         }
 
-        // Backup & Export Group
+        // 6. Data & Cloud Sync
         item {
             Text(
-                text = "Data & Backup",
+                text = "Data Management",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.entrance(6)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(6),
+                shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    SettingActionRow(
+                        icon = Icons.Default.FileDownload,
+                        title = "Export Data (CSV / JSON)",
+                        subtitle = "Export transaction ledger to local storage",
+                        onClick = { onShowMessage("Exported 10 transactions to Downloads/expenses.csv") }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    SettingActionRow(
+                        icon = Icons.Default.CloudSync,
+                        title = "Supabase Cloud Sync",
+                        subtitle = "Encrypted remote backup (Configured for Level 6)",
+                        onClick = { onShowMessage("Cloud Sync configuration ready!") }
+                    )
+                }
+            }
+        }
+
+        // 7. About App
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(7),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onShowMessage("📄 Exporting transactions to CSV... File ready in Downloads.")
-                            },
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.FileDownload,
+                            imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Export to CSV",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Export all transactions to Excel or Sheets (Tap to test)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                     }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onShowMessage("☁️ Local database is primary source of truth. Cloud sync connects in Level 8.")
-                            },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CloudSync,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column {
+                        Text(
+                            text = "Expense Tracker v1.1",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Cloud Synchronization",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Offline-first Room database. Supabase connects in Level 8",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            text = "Stride-inspired motion • Offline first • Paise precision",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
         }
 
-        // About / Build Info
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onShowMessage("Expense Tracker v1.0.0 • Pixel Expressive Architecture") }
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Expense Tracker v1.0.0 (Interactive Preview)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-        }
-
-        // Bottom nav spacer
-        item {
-            Spacer(modifier = Modifier.height(96.dp))
+            Spacer(modifier = Modifier.height(88.dp))
         }
     }
 }
@@ -310,37 +408,90 @@ private fun SettingToggleRow(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp
             )
         }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
+    }
+}
+
+@Composable
+private fun SettingActionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .bouncyClickable(scaleDown = 0.96f, onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp
+            )
+        }
     }
 }

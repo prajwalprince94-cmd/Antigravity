@@ -1,8 +1,9 @@
 package com.prajwalprince94.expensetracker.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,20 +21,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.filled.CardTravel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalAtm
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.TimeToLeave
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -51,8 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
@@ -76,9 +82,29 @@ fun QuickAddTransactionSheet(
     var selectedAccount by remember { mutableStateOf("Paytm / UPI") }
     var noteInput by remember { mutableStateOf("") }
 
-    val expenseCategories = listOf("Food & Dining", "Groceries", "Shopping", "Transportation", "Rent & Bills", "Entertainment")
-    val incomeCategories = listOf("Salary", "Freelance", "Investments", "Gifts")
-    val accounts = listOf("Paytm / UPI", "Cash", "HDFC Bank")
+    val expenseCategories = listOf(
+        "Food & Dining" to Icons.Default.Fastfood,
+        "Groceries" to Icons.Default.ShoppingCart,
+        "Fuel & Travel" to Icons.Default.LocalGasStation,
+        "Rent & Bills" to Icons.Default.Home,
+        "Shopping" to Icons.Default.ReceiptLong,
+        "Health & Fit" to Icons.Default.FitnessCenter,
+        "Education" to Icons.Default.School,
+        "Vacation" to Icons.Default.CardTravel
+    )
+
+    val incomeCategories = listOf(
+        "Salary" to Icons.Default.Work,
+        "Freelance" to Icons.Default.Payments,
+        "Investments" to Icons.Default.AccountBalance,
+        "Gifts" to Icons.Default.LocalAtm
+    )
+
+    val accounts = listOf(
+        "Paytm / UPI" to Icons.Default.PhoneAndroid,
+        "Cash" to Icons.Default.Payments,
+        "HDFC Bank" to Icons.Default.AccountBalance
+    )
 
     val activeColor by animateColorAsState(
         targetValue = when (selectedType) {
@@ -86,23 +112,24 @@ fun QuickAddTransactionSheet(
             TransactionType.INCOME -> IncomeGreen
             TransactionType.TRANSFER -> TransferBlue
         },
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "activeColor"
     )
 
-    // Parse amount safely
+    // Compute paise with precision
     val parsedAmountPaise = remember(rawAmountInput) {
         val amountDouble = rawAmountInput.toDoubleOrNull() ?: 0.0
         (amountDouble * 100).toLong()
     }
 
     val displayAmountString = remember(rawAmountInput) {
-        if (rawAmountInput.isEmpty()) "0.00" else rawAmountInput
+        if (rawAmountInput.isEmpty()) "0" else rawAmountInput
     }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -114,7 +141,7 @@ fun QuickAddTransactionSheet(
         ) {
             // Three-way Type Selector Segmented Pill
             Surface(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
@@ -143,101 +170,140 @@ fun QuickAddTransactionSheet(
                         selectedColor = TransferBlue,
                         onClick = {
                             selectedType = TransactionType.TRANSFER
-                            selectedCategory = "Transfer"
+                            selectedCategory = "Account Transfer"
                         }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Big Amount Display
-            Text(
-                text = "₹ $displayAmountString",
-                fontSize = 42.sp,
-                fontWeight = FontWeight.Bold,
-                color = activeColor,
-                textAlign = TextAlign.Center,
+            // Large Hero Amount Display with Odometer Rolling Animation
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }} Amount",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "₹",
+                            style = MaterialTheme.typography.displayMedium,
+                            color = activeColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        AnimatedCounter(
+                            text = displayAmountString,
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.ExtraBold
+                            ),
+                            color = activeColor
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Category Chips Row (Skip for transfer)
+            // Category Selector Chips
             if (selectedType != TransactionType.TRANSFER) {
+                val currentCategories = if (selectedType == TransactionType.EXPENSE) expenseCategories else incomeCategories
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Category",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(currentCategories) { (catName, icon) ->
+                            val isSelected = selectedCategory == catName
+                            BouncyChip(
+                                text = catName,
+                                icon = icon,
+                                isSelected = isSelected,
+                                activeColor = activeColor,
+                                onClick = { selectedCategory = catName }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
+            // Account Selector Chips
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Category",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "Account / Wallet",
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
+                    fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val currentCategories = if (selectedType == TransactionType.EXPENSE) expenseCategories else incomeCategories
-                    items(currentCategories) { cat ->
-                        FilterChip(
-                            selected = selectedCategory == cat,
-                            onClick = { selectedCategory = cat },
-                            label = { Text(cat) },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = activeColor.copy(alpha = 0.2f),
-                                selectedLabelColor = activeColor
-                            )
+                    items(accounts) { (accName, icon) ->
+                        val isSelected = selectedAccount == accName
+                        BouncyChip(
+                            text = accName,
+                            icon = icon,
+                            isSelected = isSelected,
+                            activeColor = MaterialTheme.colorScheme.primary,
+                            onClick = { selectedAccount = accName }
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Account Chips Row
-            Text(
-                text = if (selectedType == TransactionType.TRANSFER) "From Account" else "Account",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(accounts) { acc ->
-                    FilterChip(
-                        selected = selectedAccount == acc,
-                        onClick = { selectedAccount = acc },
-                        label = { Text(acc) },
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Note Input Field
+            // Note input field
             OutlinedTextField(
                 value = noteInput,
                 onValueChange = { noteInput = it },
-                placeholder = { Text("Note / Merchant (e.g. Swiggy, Amazon)...") },
-                shape = RoundedCornerShape(16.dp),
+                placeholder = { Text("Add remark or note (optional)") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = activeColor
+                ),
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Custom Number Keypad (Fast smartphone entry)
+            // Custom Tactile Numeric Keypad with Bouncy Spring Feedback
             NumericKeypad(
                 onDigitClick = { digit ->
-                    if (rawAmountInput.length < 9) {
-                        if (digit == "." && rawAmountInput.contains(".")) return@NumericKeypad
+                    if (digit == "." && rawAmountInput.contains(".")) {
+                        // Ignore duplicate decimal
+                    } else if (rawAmountInput.length < 9) {
                         rawAmountInput += digit
                     }
                 },
@@ -246,22 +312,26 @@ fun QuickAddTransactionSheet(
                         rawAmountInput = rawAmountInput.dropLast(1)
                     }
                 },
-                onClear = { rawAmountInput = "" }
+                onClear = {
+                    rawAmountInput = ""
+                }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // Save Transaction Button
+            // Big Save Button with Bouncy Tap Action
             Button(
                 onClick = {
                     if (parsedAmountPaise > 0) {
                         val icon = when (selectedCategory) {
                             "Food & Dining" -> Icons.Default.Fastfood
-                            "Groceries", "Shopping" -> Icons.Default.ShoppingCart
-                            "Transportation" -> Icons.Default.TimeToLeave
+                            "Groceries" -> Icons.Default.ShoppingCart
+                            "Fuel & Travel" -> Icons.Default.LocalGasStation
+                            "Rent & Bills" -> Icons.Default.Home
+                            "Shopping" -> Icons.Default.ReceiptLong
                             "Salary" -> Icons.Default.Work
-                            "Transfer" -> Icons.Default.SwapHoriz
-                            else -> Icons.Default.ReceiptLong
+                            "Freelance" -> Icons.Default.Payments
+                            else -> if (selectedType == TransactionType.TRANSFER) Icons.Default.SwapHoriz else Icons.Default.Fastfood
                         }
 
                         val newTxn = TransactionItem(
@@ -279,11 +349,42 @@ fun QuickAddTransactionSheet(
                     }
                 },
                 enabled = parsedAmountPaise > 0,
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = activeColor),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(56.dp)
+                    .bouncyClickable(
+                        scaleDown = 0.95f,
+                        enabled = parsedAmountPaise > 0,
+                        onClick = {
+                            if (parsedAmountPaise > 0) {
+                                val icon = when (selectedCategory) {
+                                    "Food & Dining" -> Icons.Default.Fastfood
+                                    "Groceries" -> Icons.Default.ShoppingCart
+                                    "Fuel & Travel" -> Icons.Default.LocalGasStation
+                                    "Rent & Bills" -> Icons.Default.Home
+                                    "Shopping" -> Icons.Default.ReceiptLong
+                                    "Salary" -> Icons.Default.Work
+                                    "Freelance" -> Icons.Default.Payments
+                                    else -> if (selectedType == TransactionType.TRANSFER) Icons.Default.SwapHoriz else Icons.Default.Fastfood
+                                }
+
+                                val newTxn = TransactionItem(
+                                    id = UUID.randomUUID().toString(),
+                                    title = if (noteInput.isNotBlank()) noteInput else selectedCategory,
+                                    category = selectedCategory,
+                                    account = selectedAccount,
+                                    amountPaise = parsedAmountPaise,
+                                    type = selectedType,
+                                    formattedDate = "Just now",
+                                    note = noteInput,
+                                    icon = icon
+                                )
+                                onSaveTransaction(newTxn)
+                            }
+                        }
+                    )
             ) {
                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -307,17 +408,55 @@ private fun TypePillItem(
     onClick: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = if (isSelected) selectedColor else Color.Transparent,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.bouncyClickable(scaleDown = 0.92f, onClick = onClick)
     ) {
         Text(
             text = title,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 9.dp),
             fontSize = 13.sp
         )
+    }
+}
+
+@Composable
+private fun BouncyChip(
+    text: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    activeColor: Color,
+    onClick: () -> Unit
+) {
+    val containerColor = if (isSelected) activeColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHigh
+    val contentColor = if (isSelected) activeColor else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor,
+        modifier = Modifier
+            .bouncyClickable(scaleDown = 0.9f, onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                color = contentColor,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 13.sp
+            )
+        }
     }
 }
 
@@ -337,26 +476,29 @@ private fun NumericKeypad(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         keypadGrid.forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 row.forEach { key ->
                     Surface(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable {
-                                when (key) {
-                                    "⌫" -> onBackspace()
-                                    else -> onDigitClick(key)
+                            .height(54.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .bouncyClickable(
+                                scaleDown = 0.88f,
+                                onClick = {
+                                    when (key) {
+                                        "⌫" -> onBackspace()
+                                        else -> onDigitClick(key)
+                                    }
                                 }
-                            },
-                        shape = RoundedCornerShape(16.dp),
+                            ),
+                        shape = RoundedCornerShape(18.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -371,7 +513,7 @@ private fun NumericKeypad(
                                 Text(
                                     text = key,
                                     fontSize = 22.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }

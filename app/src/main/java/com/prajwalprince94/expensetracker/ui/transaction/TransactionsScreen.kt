@@ -1,7 +1,6 @@
 package com.prajwalprince94.expensetracker.ui.transaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,13 +22,12 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,9 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.ui.components.bob
+import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
+import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
@@ -90,7 +92,8 @@ fun TransactionsScreen(
         Text(
             text = "Transactions",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.entrance(0)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -109,44 +112,57 @@ fun TransactionsScreen(
             },
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { searchQuery = "" }) {
+                    IconButton(
+                        onClick = { searchQuery = "" },
+                        modifier = Modifier.bouncyClickable(scaleDown = 0.85f) { searchQuery = "" }
+                    ) {
                         Icon(Icons.Default.Clear, contentDescription = "Clear search")
                     }
                 }
             },
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
                 focusedBorderColor = MaterialTheme.colorScheme.primary
             ),
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .entrance(1)
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Horizontal filter chips with real-time list filtering
+        // Horizontal filter chips with Stride bouncy clicks
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .entrance(2)
         ) {
             items(filterOptions) { filter ->
                 val isSelected = selectedFilter == filter
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { selectedFilter = filter },
-                    label = { Text(filter) },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                        selectedFilter = filter
+                    }
+                ) {
+                    Text(
+                        text = filter,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
-                )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Dynamic filtered transaction list
         if (filteredList.isEmpty()) {
@@ -156,13 +172,16 @@ fun TransactionsScreen(
                     .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("🔍", fontSize = 40.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.bob(amplitude = 6.dp)
+                ) {
+                    Text("🔍", fontSize = 48.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "No matching transactions",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "Try adjusting your search or filter",
@@ -180,10 +199,12 @@ fun TransactionsScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onSelectTransaction(txn) },
-                        shape = RoundedCornerShape(18.dp),
+                            .bouncyClickable(scaleDown = 0.95f) {
+                                onSelectTransaction(txn)
+                            },
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
                         )
                     ) {
                         Row(
@@ -224,7 +245,7 @@ fun TransactionsScreen(
                                 Text(
                                     text = txn.title,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "${txn.category} • ${txn.account}",
@@ -237,22 +258,25 @@ fun TransactionsScreen(
                                 Text(
                                     text = txn.formattedAmount,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = tintColor
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = when (txn.type) {
+                                        TransactionType.TRANSFER -> TransferBlue
+                                        TransactionType.EXPENSE -> ExpenseRed
+                                        TransactionType.INCOME -> IncomeGreen
+                                    }
                                 )
                                 Text(
                                     text = txn.formattedDate,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.outline
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
                 }
 
-                // Bottom spacing for floating bar
                 item {
-                    Spacer(modifier = Modifier.height(96.dp))
+                    Spacer(modifier = Modifier.height(88.dp))
                 }
             }
         }
