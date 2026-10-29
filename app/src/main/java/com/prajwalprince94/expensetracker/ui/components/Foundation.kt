@@ -75,37 +75,40 @@ fun GlassCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    Column(
-        modifier = modifier
-            .clip(shape)
-            .background(containerColor)
-            .then(
-                if (isDark) {
-                    Modifier.border(
-                        BorderStroke(
-                            width = 1.dp,
-                            brush = Brush.verticalGradient(
-                                listOf(
-                                    borderTint.copy(alpha = 0.70f),
-                                    borderTint.copy(alpha = 0.15f)
-                                )
+    androidx.compose.material3.Surface(
+        modifier = modifier.then(
+            if (isDark) {
+                Modifier.border(
+                    BorderStroke(
+                        width = 1.dp,
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                borderTint.copy(alpha = 0.70f),
+                                borderTint.copy(alpha = 0.15f)
                             )
-                        ),
-                        shape
-                    )
-                } else {
-                    Modifier.border(
-                        BorderStroke(
-                            width = 1.dp,
-                            color = borderTint.copy(alpha = 0.45f)
-                        ),
-                        shape
-                    )
-                }
-            )
-            .padding(contentPadding),
-        content = content
-    )
+                        )
+                    ),
+                    shape
+                )
+            } else {
+                Modifier.border(
+                    BorderStroke(
+                        width = 1.dp,
+                        color = borderTint.copy(alpha = 0.45f)
+                    ),
+                    shape
+                )
+            }
+        ),
+        shape = shape,
+        color = containerColor,
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
+        Column(
+            modifier = Modifier.padding(contentPadding),
+            content = content
+        )
+    }
 }
 
 /**

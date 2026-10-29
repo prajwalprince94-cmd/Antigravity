@@ -88,7 +88,8 @@ fun TransactionDetailSheet(
             Text(
                 text = transaction.title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -192,7 +193,8 @@ private fun DetailRow(label: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

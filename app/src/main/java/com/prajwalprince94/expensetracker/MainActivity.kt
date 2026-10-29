@@ -27,6 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -34,14 +36,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
+import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
+import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.navigation.Screen
 import com.prajwalprince94.expensetracker.ui.budgets.BudgetsScreen
-import com.prajwalprince94.expensetracker.ui.components.AuroraBackground
 import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
 import com.prajwalprince94.expensetracker.ui.components.LocalReduceMotion
 import com.prajwalprince94.expensetracker.ui.components.QuickAddTransactionSheet
 import com.prajwalprince94.expensetracker.ui.components.TransactionDetailSheet
+import com.prajwalprince94.expensetracker.ui.components.UpdateBottomSheet
 import com.prajwalprince94.expensetracker.ui.home.HomeScreen
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
@@ -150,31 +154,41 @@ fun MainApp(
     var selectedTransactionForDetail by remember { mutableStateOf<TransactionItem?>(null) }
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Living Aurora Backdrop inspired by NikhilKain/Range
-    AuroraBackground(
-        modifier = Modifier.fillMaxSize(),
-        animated = preferences.ambientAurora && !preferences.reduceMotion
-    ) {
+    var pendingUpdateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var showUpdateSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        try {
+            val updateInfo = AppUpdateManager.checkForUpdates(BuildConfig.VERSION_NAME)
+            if (updateInfo.isUpdateAvailable) {
+                pendingUpdateInfo = updateInfo
+                showUpdateSheet = true
+            }
+        } catch (_: Exception) {}
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent,
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = {
-                FloatingBottomNavBar(
-                    currentRoute = currentRoute,
-                    onNavigate = { screen ->
-                        navController.navigate(screen.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+        bottomBar = {
+            FloatingBottomNavBar(
+                currentRoute = currentRoute,
+                onNavigate = { screen ->
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
                         }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                )
-            }
-        ) { innerPadding ->
-            // Range fluid horizontal slide + fade transitions
+                }
+            )
+        }
+    ) { innerPadding ->
+        // Stride fluid horizontal slide + fade transitions
             NavHost(
                 navController = navController,
                 startDestination = Screen.Home.route,
@@ -282,6 +296,17 @@ fun MainApp(
                     scope.launch {
                         snackbarHostState.showSnackbar("Transaction deleted from database")
                     }
+                }
+            )
+        }
+
+        // In-App Update Bottom Sheet
+        if (showUpdateSheet && pendingUpdateInfo != null) {
+            UpdateBottomSheet(
+                updateInfo = pendingUpdateInfo!!,
+                onDismiss = { showUpdateSheet = false },
+                onShowMessage = { msg ->
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
                 }
             )
         }

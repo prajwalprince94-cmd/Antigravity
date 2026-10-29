@@ -50,7 +50,17 @@ fun ExpenseTrackerTheme(
 
     MaterialTheme(
         colorScheme = finalColorScheme,
-        typography = Typography,
-        content = content
-    )
+        typography = Typography
+    ) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalContentColor provides finalColorScheme.onBackground
+        ) {
+            androidx.compose.material3.Surface(
+                modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                color = finalColorScheme.background,
+                contentColor = finalColorScheme.onBackground,
+                content = content
+            )
+        }
+    }
 }

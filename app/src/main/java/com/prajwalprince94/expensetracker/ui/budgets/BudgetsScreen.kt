@@ -27,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -44,13 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
-import com.prajwalprince94.expensetracker.ui.components.BudgetTape
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
+import com.prajwalprince94.expensetracker.ui.components.isWideScreen
+import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
 import java.time.LocalDate
@@ -67,6 +70,8 @@ fun BudgetsScreen(
 ) {
     var editingBudget by remember { mutableStateOf<CategoryBudgetItem?>(null) }
     val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val wide = isWideScreen()
+    val horizontalPadding = responsiveHorizontalPadding()
 
     val totalSpentPaise = budgetItems.sumOf { it.spentPaise }
     val totalLimitPaise = budgetItems.sumOf { it.limitPaise }
@@ -85,7 +90,7 @@ fun BudgetsScreen(
         modifier = modifier
             .fillMaxSize()
             .fadingEdges(top = 8.dp, bottom = 80.dp)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = horizontalPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // 1. Header
@@ -107,7 +112,8 @@ fun BudgetsScreen(
                     Text(
                         text = "Monthly Budgets",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -117,7 +123,7 @@ fun BudgetsScreen(
                     modifier = Modifier
                         .size(44.dp)
                         .bouncyClickable(scaleDown = 0.88f) {
-                            onShowMessage("Tap 'Edit Limit' on any category below to adjust using the interactive ruler dial.")
+                            onShowMessage("Tap any budget category below to adjust its monthly limit.")
                         }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -221,7 +227,7 @@ fun BudgetsScreen(
                 title = "Category Breakdown (${budgetItems.size})",
                 trailing = {
                     Text(
-                        text = "Tap to Scrub",
+                        text = "Tap to Adjust",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -231,7 +237,7 @@ fun BudgetsScreen(
             )
         }
 
-        // 4. Budget Items with Range GlassCard & Edit Action
+        // 4. Budget Items with Stride GlassCard & Edit Action
         items(budgetItems) { budget ->
             val isOver = budget.isOverBudget
             val progressColor = if (isOver) ExpenseRed else if (budget.progress > 0.8f) Color(0xFFFF9800) else IncomeGreen
@@ -274,7 +280,8 @@ fun BudgetsScreen(
                             Text(
                                 text = budget.category,
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             StatusPill(
                                 label = if (isOver) "Exceeded" else "%.0f%%".format(budget.progress * 100),
@@ -305,7 +312,6 @@ fun BudgetsScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Progress Bar
                 LinearProgressIndicator(
                     progress = { budget.progress.coerceIn(0f, 1f) },
                     modifier = Modifier
@@ -330,13 +336,13 @@ fun BudgetsScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit limit",
+                            contentDescription = "Edit",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Adjust Limit",
+                            text = "Edit Limit",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -351,7 +357,7 @@ fun BudgetsScreen(
         }
     }
 
-    // Modal Bottom Sheet with the Interactive Range BudgetTape Ruler Scrubber!
+    // Modal Bottom Sheet with Stride Interactive Budget Scrubber
     editingBudget?.let { itemToEdit ->
         ModalBottomSheet(
             onDismissRequest = { editingBudget = null },
@@ -368,13 +374,14 @@ fun BudgetsScreen(
                 Text(
                     text = "Adjust ${itemToEdit.category} Budget",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Scrub the tactile tape-measure ruler dial to set a new limit",
+                    text = "Slide or use quick increments to adjust monthly spending limit",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -398,19 +405,24 @@ fun BudgetsScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // The Range BudgetTape Interactive Ruler!
-                BudgetTape(
-                    valuePaise = itemToEdit.limitPaise,
-                    onValueChange = { newPaise ->
-                        onUpdateBudgetLimit(itemToEdit.id, newPaise)
-                        editingBudget = itemToEdit.copy(limitPaise = newPaise)
+                // Stride Interactive Smooth Limit Slider
+                Slider(
+                    value = itemToEdit.limitPaise.toFloat(),
+                    onValueChange = { newFloat ->
+                        val roundedPaise = (newFloat.toLong() / 50000L) * 50000L
+                        onUpdateBudgetLimit(itemToEdit.id, roundedPaise)
+                        editingBudget = itemToEdit.copy(limitPaise = roundedPaise)
                     },
-                    minPaise = 100000L,
-                    maxPaise = 5000000L,
-                    stepPaise = 50000L
+                    valueRange = 100000f..5000000f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Quick Increment / Decrement Pills
                 Row(
@@ -458,7 +470,7 @@ fun BudgetsScreen(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
-                            text = "Done",
+                            text = "Save Budget",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onPrimary
@@ -466,7 +478,7 @@ fun BudgetsScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }

@@ -126,7 +126,7 @@ fun BootSequence(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Stride UI/UX • Range Aesthetics • Offline-First",
+                text = "Stride Edition • Offline SQLite Vault",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

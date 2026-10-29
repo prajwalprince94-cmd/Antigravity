@@ -83,7 +83,7 @@ fun TransactionsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding())
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -91,6 +91,7 @@ fun TransactionsScreen(
             text = "Transactions",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.entrance(0)
         )
 
@@ -119,6 +120,8 @@ fun TransactionsScreen(
             },
             shape = RoundedCornerShape(22.dp),
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 unfocusedBorderColor = Color.Transparent,
@@ -177,7 +180,8 @@ fun TransactionsScreen(
                     Text(
                         text = "No matching transactions",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Try adjusting your search or filter",

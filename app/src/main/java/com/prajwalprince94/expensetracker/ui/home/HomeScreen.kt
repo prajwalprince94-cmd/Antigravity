@@ -1,6 +1,8 @@
 package com.prajwalprince94.expensetracker.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +30,6 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,18 +43,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
+import com.prajwalprince94.expensetracker.ui.components.CategoryDistributionCard
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.isSystemInDarkTheme
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
+import com.prajwalprince94.expensetracker.ui.components.SpendingTrendLineChart
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.components.glow
+import com.prajwalprince94.expensetracker.ui.components.isWideScreen
+import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
-import com.prajwalprince94.expensetracker.ui.theme.CardShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedDark
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
@@ -61,8 +63,6 @@ import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenDark
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenLight
 import com.prajwalprince94.expensetracker.ui.theme.TransferBlue
-import com.prajwalprince94.expensetracker.ui.theme.TransferBlueDark
-import com.prajwalprince94.expensetracker.ui.theme.TransferBlueLight
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 import java.time.LocalDate
@@ -86,6 +86,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val isDark = isSystemInDarkTheme()
+    val wide = isWideScreen()
+    val horizontalPadding = responsiveHorizontalPadding()
 
     val totalIncomePaise = transactions
         .filter { it.type == TransactionType.INCOME }
@@ -103,14 +105,19 @@ fun HomeScreen(
         AccountPreview("Cash Wallet", "Physical Cash", "₹4,240.00", Icons.Default.Payments)
     )
 
+    val incomePillBg = if (isDark) Color(0xFF10B981).copy(alpha = 0.16f) else IncomeGreenLight
+    val incomePillText = if (isDark) IncomeGreenDark else Color(0xFF059669)
+    val expensePillBg = if (isDark) Color(0xFFEF4444).copy(alpha = 0.16f) else ExpenseRedLight
+    val expensePillText = if (isDark) ExpenseRedDark else Color(0xFFDC2626)
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .fadingEdges(top = 8.dp, bottom = 80.dp)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = horizontalPadding),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Top Header
+        // 1. Top Header with Current Date & Notifications
         item {
             Spacer(modifier = Modifier.height(6.dp))
             Row(
@@ -129,7 +136,8 @@ fun HomeScreen(
                     Text(
                         text = "My Finances",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -154,260 +162,96 @@ fun HomeScreen(
             }
         }
 
-        // 2. Hero Net Balance GlassCard with Soft Glow & Rolling Odometer
-        item {
-            val incomePillBg = if (isDark) Color(0xFF10B981).copy(alpha = 0.16f) else IncomeGreenLight
-            val incomePillText = if (isDark) IncomeGreenDark else Color(0xFF059669)
-            val expensePillBg = if (isDark) Color(0xFFEF4444).copy(alpha = 0.16f) else ExpenseRedLight
-            val expensePillText = if (isDark) ExpenseRedDark else Color(0xFFDC2626)
-
-            GlassCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glow(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f), radius = 90.dp, alpha = 0.25f)
-                    .entrance(1),
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                contentPadding = 22.dp
-            ) {
-                Text(
-                    text = "TOTAL NET BALANCE",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = 1.2.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                AnimatedRupeeTicker(
-                    paise = netBalancePaise,
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Income vs Expense Pills with Stride/Range bouncy clicks
+        // Adaptive Layout: If wide screen (tablet/foldable), render Hero + Actions and Charts side by side
+        if (wide) {
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Income Pill
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .bouncyClickable(scaleDown = 0.94f) {
-                                onOpenQuickAdd(TransactionType.INCOME)
-                            },
-                        shape = RoundedCornerShape(20.dp),
-                        color = incomePillBg,
-                        border = if (isDark) BorderStroke(1.dp, IncomeGreen.copy(alpha = 0.35f)) else null
+                    // Left Column
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(IncomeGreen),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDownward,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(text = "Income", fontSize = 11.sp, color = incomePillText, fontWeight = FontWeight.Bold)
-                                AnimatedRupeeTicker(
-                                    paise = totalIncomePaise,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp
-                                    ),
-                                    color = incomePillText,
-                                    prefix = "+"
-                                )
-                            }
-                        }
-                    }
-
-                    // Expense Pill
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .bouncyClickable(scaleDown = 0.94f) {
-                                onOpenQuickAdd(TransactionType.EXPENSE)
-                            },
-                        shape = RoundedCornerShape(20.dp),
-                        color = expensePillBg,
-                        border = if (isDark) BorderStroke(1.dp, ExpenseRed.copy(alpha = 0.35f)) else null
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(ExpenseRed),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowUpward,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(text = "Expense", fontSize = 11.sp, color = expensePillText, fontWeight = FontWeight.Bold)
-                                AnimatedRupeeTicker(
-                                    paise = totalExpensePaise,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp
-                                    ),
-                                    color = expensePillText,
-                                    prefix = "-"
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 3. Quick Action Buttons
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .entrance(2),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                QuickActionButton(
-                    icon = Icons.Default.Add,
-                    label = "Expense",
-                    containerColor = ExpenseRed,
-                    contentColor = Color.White,
-                    onClick = { onOpenQuickAdd(TransactionType.EXPENSE) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                QuickActionButton(
-                    icon = Icons.Default.ArrowDownward,
-                    label = "Income",
-                    containerColor = IncomeGreen,
-                    contentColor = Color.White,
-                    onClick = { onOpenQuickAdd(TransactionType.INCOME) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                QuickActionButton(
-                    icon = Icons.Default.SwapHoriz,
-                    label = "Transfer",
-                    containerColor = TransferBlue,
-                    contentColor = Color.White,
-                    onClick = { onOpenQuickAdd(TransactionType.TRANSFER) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                QuickActionButton(
-                    icon = Icons.Default.QrCodeScanner,
-                    label = "Scan",
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    onClick = { onShowMessage("Camera Scanner ready! Select expense category to auto-log.") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        // 4. Accounts & Wallets Carousel with GlassCard
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .entrance(3)
-            ) {
-                SectionHeader(
-                    title = "Accounts & Wallets",
-                    trailing = {
-                        Text(
-                            text = "3 Linked",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        HeroBalanceCard(
+                            netBalancePaise = netBalancePaise,
+                            totalIncomePaise = totalIncomePaise,
+                            totalExpensePaise = totalExpensePaise,
+                            incomePillBg = incomePillBg,
+                            incomePillText = incomePillText,
+                            expensePillBg = expensePillBg,
+                            expensePillText = expensePillText,
+                            isDark = isDark,
+                            onOpenQuickAdd = onOpenQuickAdd
                         )
+
+                        QuickActionsRow(
+                            onOpenQuickAdd = onOpenQuickAdd,
+                            onShowMessage = onShowMessage
+                        )
+
+                        SpendingTrendLineChart(transactions = transactions)
                     }
-                )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(accounts) { acc ->
-                        GlassCard(
-                            modifier = Modifier
-                                .width(185.dp)
-                                .bouncyClickable(scaleDown = 0.94f) {
-                                    onShowMessage("${acc.name} selected: ${acc.balance}")
-                                },
-                            contentPadding = 16.dp
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = acc.icon,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = acc.name,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            Text(
-                                text = acc.type,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                            Text(
-                                text = acc.balance,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                    // Right Column
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CategoryDistributionCard(transactions = transactions)
+                        AccountsCarousel(accounts = accounts, onShowMessage = onShowMessage)
                     }
                 }
             }
+        } else {
+            // Standard Smartphone Layout (Single Column)
+            // 2. Hero Net Balance GlassCard
+            item {
+                HeroBalanceCard(
+                    netBalancePaise = netBalancePaise,
+                    totalIncomePaise = totalIncomePaise,
+                    totalExpensePaise = totalExpensePaise,
+                    incomePillBg = incomePillBg,
+                    incomePillText = incomePillText,
+                    expensePillBg = expensePillBg,
+                    expensePillText = expensePillText,
+                    isDark = isDark,
+                    onOpenQuickAdd = onOpenQuickAdd
+                )
+            }
+
+            // 3. Quick Action Buttons
+            item {
+                QuickActionsRow(
+                    onOpenQuickAdd = onOpenQuickAdd,
+                    onShowMessage = onShowMessage
+                )
+            }
+
+            // 4. Interactive 7-Day Spending Bezier Curve Line Chart
+            item {
+                SpendingTrendLineChart(
+                    transactions = transactions,
+                    modifier = Modifier.entrance(2)
+                )
+            }
+
+            // 5. Category Distribution Breakdown Card
+            item {
+                CategoryDistributionCard(
+                    transactions = transactions,
+                    modifier = Modifier.entrance(3)
+                )
+            }
+
+            // 6. Accounts & Wallets Carousel
+            item {
+                AccountsCarousel(accounts = accounts, onShowMessage = onShowMessage)
+            }
         }
 
-        // 5. Recent Transactions Header with "See All"
+        // Recent Transactions Section Header
         item {
             SectionHeader(
                 title = "Recent Transactions",
@@ -426,7 +270,7 @@ fun HomeScreen(
             )
         }
 
-        // 6. Recent Transaction Items (Top 5) with GlassCard & StatusPill
+        // Recent Transaction Items
         val recentList = transactions.take(5)
         items(recentList) { txn ->
             val tintColor = getFinancialColor(txn.type, isDark)
@@ -494,6 +338,270 @@ fun HomeScreen(
 
         item {
             Spacer(modifier = Modifier.height(88.dp))
+        }
+    }
+}
+
+@Composable
+private fun HeroBalanceCard(
+    netBalancePaise: Long,
+    totalIncomePaise: Long,
+    totalExpensePaise: Long,
+    incomePillBg: Color,
+    incomePillText: Color,
+    expensePillBg: Color,
+    expensePillText: Color,
+    isDark: Boolean,
+    onOpenQuickAdd: (TransactionType) -> Unit
+) {
+    GlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glow(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f), radius = 90.dp, alpha = 0.25f)
+            .entrance(1),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        contentPadding = 22.dp
+    ) {
+        Text(
+            text = "TOTAL NET BALANCE",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 1.2.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        AnimatedRupeeTicker(
+            paise = netBalancePaise,
+            style = MaterialTheme.typography.displayMedium.copy(
+                fontWeight = FontWeight.ExtraBold
+            ),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Income Pill
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .bouncyClickable(scaleDown = 0.94f) {
+                        onOpenQuickAdd(TransactionType.INCOME)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                color = incomePillBg,
+                border = if (isDark) BorderStroke(1.dp, IncomeGreen.copy(alpha = 0.35f)) else null
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(IncomeGreen),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(text = "Income", fontSize = 11.sp, color = incomePillText, fontWeight = FontWeight.Bold)
+                        AnimatedRupeeTicker(
+                            paise = totalIncomePaise,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            ),
+                            color = incomePillText,
+                            prefix = "+"
+                        )
+                    }
+                }
+            }
+
+            // Expense Pill
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .bouncyClickable(scaleDown = 0.94f) {
+                        onOpenQuickAdd(TransactionType.EXPENSE)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                color = expensePillBg,
+                border = if (isDark) BorderStroke(1.dp, ExpenseRed.copy(alpha = 0.35f)) else null
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(ExpenseRed),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(text = "Expense", fontSize = 11.sp, color = expensePillText, fontWeight = FontWeight.Bold)
+                        AnimatedRupeeTicker(
+                            paise = totalExpensePaise,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            ),
+                            color = expensePillText,
+                            prefix = "-"
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionsRow(
+    onOpenQuickAdd: (TransactionType) -> Unit,
+    onShowMessage: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .entrance(2),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        QuickActionButton(
+            icon = Icons.Default.Add,
+            label = "Expense",
+            containerColor = ExpenseRed,
+            contentColor = Color.White,
+            onClick = { onOpenQuickAdd(TransactionType.EXPENSE) },
+            modifier = Modifier.weight(1f)
+        )
+
+        QuickActionButton(
+            icon = Icons.Default.ArrowDownward,
+            label = "Income",
+            containerColor = IncomeGreen,
+            contentColor = Color.White,
+            onClick = { onOpenQuickAdd(TransactionType.INCOME) },
+            modifier = Modifier.weight(1f)
+        )
+
+        QuickActionButton(
+            icon = Icons.Default.SwapHoriz,
+            label = "Transfer",
+            containerColor = TransferBlue,
+            contentColor = Color.White,
+            onClick = { onOpenQuickAdd(TransactionType.TRANSFER) },
+            modifier = Modifier.weight(1f)
+        )
+
+        QuickActionButton(
+            icon = Icons.Default.QrCodeScanner,
+            label = "Scan",
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            onClick = { onShowMessage("Camera Scanner ready! Select expense category to auto-log.") },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun AccountsCarousel(
+    accounts: List<AccountPreview>,
+    onShowMessage: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .entrance(3)
+    ) {
+        SectionHeader(
+            title = "Accounts & Wallets",
+            trailing = {
+                Text(
+                    text = "3 Linked",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(accounts) { acc ->
+                GlassCard(
+                    modifier = Modifier
+                        .width(185.dp)
+                        .bouncyClickable(scaleDown = 0.94f) {
+                            onShowMessage("${acc.name} selected: ${acc.balance}")
+                        },
+                    contentPadding = 16.dp
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = acc.icon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = acc.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = acc.type,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 11.sp
+                    )
+                    Text(
+                        text = acc.balance,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 }

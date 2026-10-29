@@ -29,16 +29,21 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,17 +53,24 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.BuildConfig
+import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
+import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
+import com.prajwalprince94.expensetracker.ui.components.UpdateBottomSheet
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
+import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
 import com.prajwalprince94.expensetracker.ui.model.AppPalette
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.ColorStyle
 import com.prajwalprince94.expensetracker.ui.model.ThemeMode
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     preferences: AppPreferences,
@@ -69,12 +81,17 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     var isAppLockEnabled by remember { mutableStateOf(false) }
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+    var updateInfoToDisplay by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    val updateSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    val horizontalPadding = responsiveHorizontalPadding()
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .fadingEdges(top = 8.dp, bottom = 80.dp)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = horizontalPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -83,6 +100,7 @@ fun SettingsScreen(
                 text = "Settings",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.entrance(0)
             )
             Text(
@@ -134,7 +152,7 @@ fun SettingsScreen(
             }
         }
 
-        // 2. Color Palette & Styles (Stride ColorBlendr Inspiration)
+        // 2. Color Palette & Styles (Stride Inspiration)
         item {
             SectionHeader(title = "App Color Accent", modifier = Modifier.entrance(2))
             Spacer(modifier = Modifier.height(4.dp))
@@ -147,7 +165,8 @@ fun SettingsScreen(
                 Text(
                     text = "Accent Palette",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -185,158 +204,200 @@ fun SettingsScreen(
                                 Text(
                                     text = palette.displayName,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    fontSize = 13.sp,
-                                    color = if (isSelected) previewColor else MaterialTheme.colorScheme.onSurface
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = "Color Harmony Style",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(ColorStyle.values()) { style ->
+                        val isSelected = preferences.colorStyle == style
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                                onUpdatePreferences(preferences.copy(colorStyle = style))
+                                onShowMessage("${style.displayName} style applied")
+                            }
+                        ) {
+                            Text(
+                                text = style.displayName,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+                            )
                         }
                     }
                 }
             }
         }
 
-        // 3. Stride ColorStyles Selector
+        // 3. AMOLED & Visual Effects
         item {
-            SectionHeader(title = "Material Expressive Style", modifier = Modifier.entrance(3))
+            SectionHeader(title = "Display & Surfaces", modifier = Modifier.entrance(3))
             Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(3),
-                contentPadding = 8.dp
+                contentPadding = 12.dp
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    ColorStyle.values().forEach { style ->
-                        val isSelected = preferences.colorStyle == style
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .bouncyClickable(scaleDown = 0.92f) {
-                                    onUpdatePreferences(preferences.copy(colorStyle = style))
-                                    onShowMessage("${style.name.lowercase()} styling active")
-                                },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = style.name.lowercase().replaceFirstChar { it.uppercase() },
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                SettingToggleRow(
+                    icon = Icons.Default.Brightness4,
+                    title = "Pure Black AMOLED",
+                    subtitle = "Sets surfaces to #000000 on dark theme for OLED displays",
+                    checked = preferences.amoled,
+                    onCheckedChange = {
+                        onUpdatePreferences(preferences.copy(amoled = it))
+                        onShowMessage(if (it) "Pure Black AMOLED enabled" else "Standard dark theme enabled")
                     }
-                }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                SettingToggleRow(
+                    icon = Icons.Default.MotionPhotosOff,
+                    title = "Reduce Motion",
+                    subtitle = "Replaces spring physics with instant transitions",
+                    checked = preferences.reduceMotion,
+                    onCheckedChange = {
+                        onUpdatePreferences(preferences.copy(reduceMotion = it))
+                        onShowMessage(if (it) "Motion reduced" else "Full animations enabled")
+                    }
+                )
             }
         }
 
-        // 4. Display & Visual Atmosphere (Range Aurora + AMOLED)
+        // 4. Security & Biometrics
         item {
-            SectionHeader(title = "Atmosphere & Visuals", modifier = Modifier.entrance(4))
+            SectionHeader(title = "Security & Privacy", modifier = Modifier.entrance(4))
             Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(4),
-                contentPadding = 8.dp
+                contentPadding = 12.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-                    SettingToggleRow(
-                        icon = Icons.Default.DarkMode,
-                        title = "Pure Black AMOLED",
-                        subtitle = "Absolute #000000 background surface for OLED displays",
-                        checked = preferences.amoled,
-                        onCheckedChange = {
-                            onUpdatePreferences(preferences.copy(amoled = it))
-                            onShowMessage(if (it) "AMOLED Pure Black active" else "Standard dark theme active")
-                        }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                    SettingToggleRow(
-                        icon = Icons.Default.AutoAwesome,
-                        title = "Living Aurora Backdrop",
-                        subtitle = "Soft ambient color glows drifting behind cards",
-                        checked = preferences.ambientAurora,
-                        onCheckedChange = {
-                            onUpdatePreferences(preferences.copy(ambientAurora = it))
-                            onShowMessage(if (it) "Living Aurora enabled" else "Living Aurora paused")
-                        }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                    SettingToggleRow(
-                        icon = Icons.Default.MotionPhotosOff,
-                        title = "Reduce Motion",
-                        subtitle = "Disable bouncy physics and living starfield animations",
-                        checked = preferences.reduceMotion,
-                        onCheckedChange = {
-                            onUpdatePreferences(preferences.copy(reduceMotion = it))
-                            onShowMessage(if (it) "Animations reduced" else "Expressive motion enabled")
-                        }
-                    )
-                }
+                SettingToggleRow(
+                    icon = Icons.Default.Fingerprint,
+                    title = "Biometric Lock",
+                    subtitle = "Require fingerprint or face unlock on launch",
+                    checked = isAppLockEnabled,
+                    onCheckedChange = {
+                        isAppLockEnabled = it
+                        onShowMessage(if (it) "Biometric Lock enabled" else "Biometric Lock disabled")
+                    }
+                )
             }
         }
 
-        // 5. Security & Biometrics
+        // 5. In-App Update Engine
         item {
-            SectionHeader(title = "Security & Privacy", modifier = Modifier.entrance(5))
+            SectionHeader(title = "App Updates & Releases", modifier = Modifier.entrance(5))
             Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(5),
-                contentPadding = 8.dp
+                contentPadding = 14.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-                    SettingToggleRow(
-                        icon = Icons.Default.Fingerprint,
-                        title = "Biometric Lock",
-                        subtitle = "Require fingerprint or face unlock on launch",
-                        checked = isAppLockEnabled,
-                        onCheckedChange = {
-                            isAppLockEnabled = it
-                            onShowMessage(if (it) "Biometric Lock enabled" else "Biometric Lock disabled")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isCheckingUpdate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.SystemUpdate,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-                    )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Check for Updates",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Current: v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                            if (!isCheckingUpdate) {
+                                isCheckingUpdate = true
+                                onShowMessage("Checking for latest release...")
+                                scope.launch {
+                                    val info = AppUpdateManager.checkForUpdates(BuildConfig.VERSION_NAME)
+                                    isCheckingUpdate = false
+                                    updateInfoToDisplay = info
+                                }
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = "Check",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                        )
+                    }
                 }
             }
         }
 
-        // 6. Real Offline Data Management & Database Controls
+        // 6. Offline Vault & Database Management
         item {
-            SectionHeader(title = "Offline Database & Vault", modifier = Modifier.entrance(6))
+            SectionHeader(title = "Offline Database Vault", modifier = Modifier.entrance(6))
             Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(6),
-                contentPadding = 8.dp
+                contentPadding = 12.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-                    SettingActionRow(
-                        icon = Icons.Default.FileDownload,
-                        title = "Export Data (CSV / JSON)",
-                        subtitle = "Export transaction ledger to local storage",
-                        onClick = { onShowMessage("Transactions exported to local device storage") }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                    SettingActionRow(
-                        icon = Icons.Default.CloudSync,
-                        title = "Supabase Cloud Sync",
-                        subtitle = "Encrypted remote backup sync",
-                        onClick = { onShowMessage("Cloud Sync vault active and in sync") }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                Column {
                     SettingActionRow(
                         icon = Icons.Default.RestartAlt,
-                        title = "Reset Database to Defaults",
-                        subtitle = "Restore default sample transactions and category budgets",
+                        title = "Reset Sample Data",
+                        subtitle = "Restore default transactions & budget allocations",
                         onClick = {
                             onResetDatabase()
                             onShowMessage("Database reset to factory sample data")
@@ -382,12 +443,13 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = "Expense Tracker v2.0",
+                            text = "Expense Tracker v${BuildConfig.VERSION_NAME}",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Stride Pill Navigation • Range Living Aurora • Poppins Offline",
+                            text = "Stride UI/UX • Vyxel Splash • Offline SQLite Vault",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -399,6 +461,16 @@ fun SettingsScreen(
         item {
             Spacer(modifier = Modifier.height(88.dp))
         }
+    }
+
+    // Modal Bottom Sheet showing in-app update information & installer
+    updateInfoToDisplay?.let { info ->
+        UpdateBottomSheet(
+            updateInfo = info,
+            sheetState = updateSheetState,
+            onDismiss = { updateInfoToDisplay = null },
+            onShowMessage = onShowMessage
+        )
     }
 }
 
@@ -436,7 +508,8 @@ private fun SettingToggleRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
@@ -485,7 +558,8 @@ private fun SettingActionRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
