@@ -101,6 +101,7 @@ fun HomeScreen(
     onNavigateToSubscriptions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToSplit: () -> Unit = {},
+    onOpenReceiptScanner: () -> Unit = {},
     onLogSubscriptionPayment: (String) -> Unit = {},
     onSelectTransaction: (TransactionItem) -> Unit,
     onShowMessage: (String) -> Unit,
@@ -207,6 +208,7 @@ fun HomeScreen(
 
                         QuickActionsRow(
                             onOpenQuickAdd = onOpenQuickAdd,
+                            onOpenReceiptScanner = onOpenReceiptScanner,
                             onShowMessage = onShowMessage
                         )
 
@@ -259,6 +261,7 @@ fun HomeScreen(
             item {
                 QuickActionsRow(
                     onOpenQuickAdd = onOpenQuickAdd,
+                    onOpenReceiptScanner = onOpenReceiptScanner,
                     onShowMessage = onShowMessage
                 )
             }
@@ -566,6 +569,7 @@ private fun HeroBalanceCard(
 @Composable
 private fun QuickActionsRow(
     onOpenQuickAdd: (TransactionType) -> Unit,
+    onOpenReceiptScanner: () -> Unit = {},
     onShowMessage: (String) -> Unit
 ) {
     Row(
@@ -606,7 +610,7 @@ private fun QuickActionsRow(
             label = "Scan",
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurface,
-            onClick = { onShowMessage("Camera Scanner ready! Select expense category to auto-log.") },
+            onClick = { onOpenReceiptScanner() },
             modifier = Modifier.weight(1f)
         )
     }

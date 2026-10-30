@@ -62,6 +62,7 @@ import com.prajwalprince94.expensetracker.ui.home.HomeScreen
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.receipt.ReceiptScannerSheet
 import com.prajwalprince94.expensetracker.ui.security.SecurityLockScreen
 import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
 import com.prajwalprince94.expensetracker.ui.split.SplitGroupsScreen
@@ -324,6 +325,9 @@ fun MainApp(
     var pendingUpdateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showUpdateSheet by remember { mutableStateOf(false) }
 
+    var showReceiptScannerSheet by remember { mutableStateOf(false) }
+    val receiptScannerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(Unit) {
         try {
             val updateInfo = AppUpdateManager.checkForUpdates(BuildConfig.VERSION_NAME)
@@ -386,6 +390,9 @@ fun MainApp(
                             quickAddInitialType = type
                             showQuickAddSheet = true
                         },
+                        onOpenReceiptScanner = {
+                            showReceiptScannerSheet = true
+                        },
                         onNavigateToTransactions = {
                             navController.navigate(Screen.Transactions.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -422,6 +429,9 @@ fun MainApp(
                         transactions = transactions,
                         onSelectTransaction = { txn ->
                             selectedTransactionForDetail = txn
+                        },
+                        onOpenReceiptScanner = {
+                            showReceiptScannerSheet = true
                         },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
@@ -460,6 +470,9 @@ fun MainApp(
                         },
                         onNavigateToSplit = {
                             navController.navigate(Screen.SplitGroups.route)
+                        },
+                        onOpenReceiptScanner = {
+                            showReceiptScannerSheet = true
                         },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
@@ -577,6 +590,28 @@ fun MainApp(
             UpdateBottomSheet(
                 updateInfo = pendingUpdateInfo!!,
                 onDismiss = { showUpdateSheet = false },
+                onShowMessage = { msg ->
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                }
+            )
+        }
+
+        // Smart Receipt OCR Scanner Bottom Sheet
+        if (showReceiptScannerSheet) {
+            ReceiptScannerSheet(
+                sheetState = receiptScannerSheetState,
+                accounts = accounts,
+                categories = categories,
+                onDismiss = { showReceiptScannerSheet = false },
+                onSaveTransaction = { newTxn ->
+                    onAddTransaction(newTxn)
+                    showReceiptScannerSheet = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Logged receipt: ${newTxn.title} • ${newTxn.formattedAmount}"
+                        )
+                    }
+                },
                 onShowMessage = { msg ->
                     scope.launch { snackbarHostState.showSnackbar(msg) }
                 }

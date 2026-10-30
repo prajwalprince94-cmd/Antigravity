@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
@@ -103,6 +104,7 @@ fun SettingsScreen(
     onNavigateToSubscriptions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToSplit: () -> Unit = {},
+    onOpenReceiptScanner: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -635,6 +637,28 @@ fun SettingsScreen(
                     onClick = {
                         haptics.confirm()
                         onNavigateToSplit()
+                    }
+                )
+            }
+        }
+
+        // 5.9 Smart Receipt Scanner & OCR
+        item {
+            SectionHeader(title = "Smart Receipt Scanner", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.QrCodeScanner,
+                    title = "Scan Bills & Receipts (OCR)",
+                    subtitle = "On-device camera & document scanner to auto-extract merchant, total & line items",
+                    onClick = {
+                        haptics.confirm()
+                        onOpenReceiptScanner()
                     }
                 )
             }

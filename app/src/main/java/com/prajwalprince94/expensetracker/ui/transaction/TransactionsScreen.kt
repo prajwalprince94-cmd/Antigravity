@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Icon
@@ -65,6 +66,7 @@ import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 fun TransactionsScreen(
     transactions: List<TransactionItem>,
     onSelectTransaction: (TransactionItem) -> Unit,
+    onOpenReceiptScanner: () -> Unit = {},
     onShowMessage: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -114,41 +116,75 @@ fun TransactionsScreen(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            // Quick CSV Export Button
-            Surface(
-                shape = ChipShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.bouncyClickable {
-                    haptics.confirm()
-                    if (filteredList.isEmpty()) {
-                        onShowMessage?.invoke("No transactions to export for current filter")
-                    } else {
-                        val result = CsvExporter.exportAndShare(context, filteredList)
-                        result.onSuccess {
-                            onShowMessage?.invoke("Exporting ${filteredList.size} transactions to CSV")
-                        }.onFailure { err ->
-                            onShowMessage?.invoke("Export failed: ${err.message}")
-                        }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Scan Receipt Button
+                Surface(
+                    shape = ChipShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                    modifier = Modifier.bouncyClickable {
+                        haptics.selection()
+                        onOpenReceiptScanner()
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = "Scan Receipt",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Scan",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+
+                // Quick CSV Export Button
+                Surface(
+                    shape = ChipShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.bouncyClickable {
+                        haptics.confirm()
+                        if (filteredList.isEmpty()) {
+                            onShowMessage?.invoke("No transactions to export for current filter")
+                        } else {
+                            val result = CsvExporter.exportAndShare(context, filteredList)
+                            result.onSuccess {
+                                onShowMessage?.invoke("Exporting ${filteredList.size} transactions to CSV")
+                            }.onFailure { err ->
+                                onShowMessage?.invoke("Export failed: ${err.message}")
+                            }
+                        }
+                    }
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.FileDownload,
-                        contentDescription = "Export CSV",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Export",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FileDownload,
+                            contentDescription = "Export CSV",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Export",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }

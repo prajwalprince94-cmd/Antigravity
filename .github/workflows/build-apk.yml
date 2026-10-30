@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.9.0-receipt-ocr.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.8.0-split-bills.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.7.0-analytics-dashboard.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.6.0-subscriptions.apk
@@ -56,35 +57,37 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.8.0"
-          name: "Expense Tracker v2.8.0 (Split Expense & Group Bill Splitting Suite)"
+          tag_name: "v2.9.0"
+          name: "Expense Tracker v2.9.0 (Smart Receipt OCR & Document Scanner)"
           body: |
-            ### 👥 Expense Tracker v2.8.0 (Split Expense & Group Bill Splitting Suite)
-            - **Split Groups & Multi-Member Management:**
-              - Create and organize expense sharing groups for roommates, vacation trips, dining, and utilities.
-              - Custom group accent colors, semantic icons, and member avatar badge stacks.
-            - **Flexible Bill Splitting Modes:**
-              - **Equally:** Automatic equal distribution with intelligent remainder paise allocation to the payer.
-              - **Exact Amounts:** Specify exact rupee contributions per member with real-time balance validation.
-              - **Percentages:** Allocate dynamic percentage shares with live 100% total checker.
-            - **Greedy Debt Minimization Algorithm (`SplitDebtCalculator`):**
-              - Automatically eliminates circular debt across group members, condensing complex multi-way balances into minimal direct transfers.
-              - Clear breakdown of net balances: "You are owed ₹X" vs "You owe ₹Y".
-            - **One-Tap Debt Settlement & Real-Account Sync:**
-              - Record settlements directly with one tap from the debt matrix.
-              - Bi-directional sync with real accounts: Automatically records an Income or Expense transaction in your chosen bank or wallet account!
-            - **Financial Health & Analytics Dashboard (v2.7.0):**
-              - 0-100 Financial Health score, month-over-month trends, daily burn rate, and interactive donut chart.
-            - **Recurring Subscriptions & Scheduled Bills (v2.6.0):**
-              - Due-date tracking, auto-log payments, and recurring bill reminders.
-            - **Biometric & PIN Security Suite (v2.5.0):**
-              - Fingerprint, Face biometric unlock, 4-digit PIN, and Recents Privacy Shield.
+            ### 🧾 Expense Tracker v2.9.0 (Smart Receipt OCR & Document Scanner)
+            - **Google Play Services ML Kit On-Device Text Recognition:**
+              - Fast, privacy-first on-device text recognition for paper bills, supermarket invoices, and dining slips.
+              - Zero cloud transmission: all receipt imaging and parsing occurs strictly on your device.
+            - **Intelligent Deterministic Receipt Parser (`ReceiptTextParser`):**
+              - Automatically detects merchant brand and store name from raw OCR text.
+              - Extracts grand total in rupees/paise with keyword prioritization (Total, Net Payable, Balance, Amount Due).
+              - Parses transaction dates across ISO, DD/MM/YYYY, and month name formats.
+              - Auto-suggests budget categories (Groceries, Dining, Fuel, Health, Electronics) and payment accounts.
+              - Itemized line-item extraction with individual prices.
+            - **Instant Presets & Digital Invoice Paste:**
+              - Realistic test presets (D-Mart, Starbucks, Shell Fuel, Apollo Pharmacy, Reliance Digital).
+              - Digital receipt paste mode: paste any invoice SMS or digital receipt text to parse in milliseconds.
+            - **1-Tap Expense Auto-Logging:**
+              - Direct entry into the offline expense database with category and account pre-selected.
+            - **Split Expense & Group Bill Splitting Suite (v2.8.0):**
+              - Shared groups, equal/exact/percentage splits, greedy debt simplification, and settlement sync.
+            - **Financial Health & Analytics (v2.7.0):**
+              - 0-100 score, daily burn rate, and interactive donut visualizer.
+            - **Recurring Subscriptions & Scheduled Bills (v2.6.0)**
+            - **Biometric & PIN Security Suite (v2.5.0)**
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.8.0-split-bills.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.9.0-receipt-ocr.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v2.9.0-receipt-ocr.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.8.0-split-bills.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.7.0-analytics-dashboard.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.6.0-subscriptions.apk

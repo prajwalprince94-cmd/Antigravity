@@ -12,8 +12,8 @@ android {
         applicationId = "com.prajwalprince94.expensetracker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "2.8.0"
+        versionCode = 11
+        versionName = "2.9.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -60,6 +60,9 @@ dependencies {
 
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.8.3")
+
+    // ML Kit On-Device Text Recognition (OCR)
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
