@@ -62,6 +62,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.data.model.AccountItem
+import com.prajwalprince94.expensetracker.data.model.CategoryItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
@@ -79,39 +81,73 @@ import java.util.UUID
 fun QuickAddTransactionSheet(
     sheetState: SheetState,
     initialType: TransactionType,
+    accounts: List<AccountItem> = emptyList(),
+    categories: List<CategoryItem> = emptyList(),
     onDismiss: () -> Unit,
     onSaveTransaction: (TransactionItem) -> Unit
 ) {
     val haptics = rememberAppHaptics()
     var selectedType by remember { mutableStateOf(initialType) }
     var rawAmountInput by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(if (initialType == TransactionType.INCOME) "Salary" else "Food & Dining") }
-    var selectedAccount by remember { mutableStateOf("Paytm / UPI") }
     var noteInput by remember { mutableStateOf("") }
 
-    val expenseCategories = listOf(
-        "Food & Dining" to Icons.Default.Fastfood,
-        "Groceries" to Icons.Default.ShoppingCart,
-        "Fuel & Travel" to Icons.Default.LocalGasStation,
-        "Rent & Bills" to Icons.Default.Home,
-        "Shopping" to Icons.Default.ReceiptLong,
-        "Health & Fit" to Icons.Default.FitnessCenter,
-        "Education" to Icons.Default.School,
-        "Vacation" to Icons.Default.CardTravel
-    )
+    val effectiveExpenseCategories = remember(categories) {
+        val exp = categories.filter { it.type == TransactionType.EXPENSE }
+        if (exp.isNotEmpty()) {
+            exp.map { it.name to IconRegistry.getIcon(it.iconKey) }
+        } else {
+            listOf(
+                "Food & Dining" to Icons.Default.Fastfood,
+                "Groceries" to Icons.Default.ShoppingCart,
+                "Fuel & Travel" to Icons.Default.LocalGasStation,
+                "Rent & Bills" to Icons.Default.Home,
+                "Shopping" to Icons.Default.ReceiptLong,
+                "Health & Fit" to Icons.Default.FitnessCenter,
+                "Education" to Icons.Default.School,
+                "Vacation" to Icons.Default.CardTravel
+            )
+        }
+    }
 
-    val incomeCategories = listOf(
-        "Salary" to Icons.Default.Work,
-        "Freelance" to Icons.Default.Payments,
-        "Investments" to Icons.Default.AccountBalance,
-        "Gifts" to Icons.Default.LocalAtm
-    )
+    val effectiveIncomeCategories = remember(categories) {
+        val inc = categories.filter { it.type == TransactionType.INCOME }
+        if (inc.isNotEmpty()) {
+            inc.map { it.name to IconRegistry.getIcon(it.iconKey) }
+        } else {
+            listOf(
+                "Salary" to Icons.Default.Work,
+                "Freelance" to Icons.Default.Payments,
+                "Investments" to Icons.Default.AccountBalance,
+                "Gifts" to Icons.Default.LocalAtm
+            )
+        }
+    }
 
-    val accounts = listOf(
-        "Paytm / UPI" to Icons.Default.PhoneAndroid,
-        "Cash" to Icons.Default.Payments,
-        "HDFC Bank" to Icons.Default.AccountBalance
-    )
+    val effectiveAccounts = remember(accounts) {
+        if (accounts.isNotEmpty()) {
+            accounts.map { it.name to IconRegistry.getIcon(it.iconKey) }
+        } else {
+            listOf(
+                "Paytm / UPI" to Icons.Default.PhoneAndroid,
+                "Cash" to Icons.Default.Payments,
+                "HDFC Bank" to Icons.Default.AccountBalance
+            )
+        }
+    }
+
+    var selectedCategory by remember {
+        mutableStateOf(
+            if (initialType == TransactionType.INCOME) {
+                effectiveIncomeCategories.first().first
+            } else {
+                effectiveExpenseCategories.first().first
+            }
+        )
+    }
+
+    var selectedAccount by remember {
+        mutableStateOf(effectiveAccounts.first().first)
+    }
 
     val activeColor by animateColorAsState(
         targetValue = when (selectedType) {
@@ -231,7 +267,7 @@ fun QuickAddTransactionSheet(
 
             // Category Selector Chips
             if (selectedType != TransactionType.TRANSFER) {
-                val currentCategories = if (selectedType == TransactionType.EXPENSE) expenseCategories else incomeCategories
+                val currentCategories = if (selectedType == TransactionType.EXPENSE) effectiveExpenseCategories else effectiveIncomeCategories
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -274,7 +310,7 @@ fun QuickAddTransactionSheet(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(accounts) { (accName, icon) ->
+                    items(effectiveAccounts) { (accName, icon) ->
                         val isSelected = selectedAccount == accName
                         BouncyChip(
                             text = accName,

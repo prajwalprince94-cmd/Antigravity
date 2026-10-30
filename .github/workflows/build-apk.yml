@@ -41,43 +41,46 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.4.0-accounts-categories.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.3.0-csv-export.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.2.0-appllama-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.1.0-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-high-contrast.apk
 
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.3.0"
-          name: "Expense Tracker v2.3.0 (CSV Data Export & Share Sheet)"
+          tag_name: "v2.4.0"
+          name: "Expense Tracker v2.4.0 (Accounts & Custom Categories Management)"
           body: |
-            ### 📊 Expense Tracker v2.3.0 (CSV Statement Export & Share Sheet)
-            - **RFC 4180 Compliant CSV Export Engine:**
-              - Fast, memory-efficient streaming CSV generator escaping quotes, commas, and newlines according to standard specifications.
-              - Exports full transaction attributes: `Transaction ID`, `Title`, `Category`, `Type` (Expense/Income/Transfer), `Account`, `Amount (INR)`, `Date & Time`, and `Remark / Note`.
-            - **Native Android Share Sheet Integration:**
-              - Generates timestamped `.csv` file in private cache storage (`context.cacheDir/exports/`) with secure FileProvider URI grants (`FLAG_GRANT_READ_URI_PERMISSION`).
-              - Triggers native Android Chooser (`Intent.createChooser`) allowing direct sharing to WhatsApp, Google Drive, Gmail, Slack, Telegram, or any local file manager.
-            - **Seamless Multi-Touchpoint Access:**
-              - **Transactions Screen Quick Export:** Quick-tap "Export" pill button right next to the screen header automatically exports active search & category filtered results.
-              - **Settings Screen Offline Vault Export:** "Export Statement (CSV)" row in the Offline Database Vault section shares the complete database statement with transaction counts and error protection.
-            - **Appllama Design System & Skeletons:**
-              - Squircle scale, tactile haptic feedback, shimmering layout-matched skeletons, and zero-slop empty states.
+            ### 💳 Expense Tracker v2.4.0 (Accounts & Custom Categories Masterpiece)
+            - **Multi-Account Vault & Live Balance Architecture:**
+              - Complete management (Create, Edit, Delete) for multi-account financial containers (`UPI`, `BANK`, `CASH`, `CARD`, `SAVINGS`).
+              - Real-time mathematically verified balance calculation combining opening balance with atomic credits and debits from recorded transactions.
+              - Full SQLite ACID persistence with zero-data-loss database schema migration (`accounts` table).
+            - **Custom Category Creator & Icon Registry:**
+              - User-created custom category tags for both `Expense` and `Income`.
+              - Centralized `IconRegistry` with 21+ curated finance, lifestyle, travel, and utility icons and 10 vibrant color swatches.
+              - System default categories protection (default categories are locked to guarantee core budget tracking stability).
+            - **Seamless App-Wide Integration:**
+              - **Quick Add Transaction Sheet:** Category and account selector chips dynamically reflect user accounts and newly created tags.
+              - **Home Dashboard Carousel:** Real-time account balances, color badges, and one-tap "Manage" pill leading directly to Accounts & Categories.
+              - **Settings Configuration:** Dedicated "Accounts & Tagging" section for direct access and management.
+            - **Stride & Appllama Design Polish:**
+              - Squircle continuous shape scale, responsive segmented pill tab switcher, fluid bottom sheets, tactile haptic feedback, and pure OLED dark mode contrast.
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.3.0-csv-export.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.4.0-accounts-categories.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v2.4.0-accounts-categories.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.3.0-csv-export.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.2.0-appllama-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.1.0-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-high-contrast.apk
-            app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

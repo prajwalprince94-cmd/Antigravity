@@ -35,10 +35,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.prajwalprince94.expensetracker.data.model.AccountItem
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
+import com.prajwalprince94.expensetracker.data.model.CategoryItem
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.navigation.Screen
+import com.prajwalprince94.expensetracker.ui.accounts.AccountsAndCategoriesScreen
 import com.prajwalprince94.expensetracker.ui.budgets.BudgetsScreen
 import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
@@ -66,6 +69,8 @@ class MainActivity : ComponentActivity() {
             val preferences by repository.preferences.collectAsState()
             val transactions by repository.transactions.collectAsState()
             val budgets by repository.budgets.collectAsState()
+            val accounts by repository.accounts.collectAsState()
+            val categories by repository.categories.collectAsState()
             val isLoaded by repository.isLoaded.collectAsState()
 
             var hasBooted by remember { mutableStateOf(false) }
@@ -87,6 +92,8 @@ class MainActivity : ComponentActivity() {
                                 preferences = preferences,
                                 transactions = transactions,
                                 budgets = budgets,
+                                accounts = accounts,
+                                categories = categories,
                                 onAddTransaction = { txn ->
                                     ExpenseGraph.appScope.launch {
                                         repository.addTransaction(txn)
@@ -100,6 +107,31 @@ class MainActivity : ComponentActivity() {
                                 onUpdateBudgetLimit = { id, limit ->
                                     ExpenseGraph.appScope.launch {
                                         repository.updateBudgetLimit(id, limit)
+                                    }
+                                },
+                                onAddAccount = { acc ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addAccount(acc)
+                                    }
+                                },
+                                onUpdateAccount = { acc ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.updateAccount(acc)
+                                    }
+                                },
+                                onDeleteAccount = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.deleteAccount(id)
+                                    }
+                                },
+                                onAddCategory = { cat ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addCategory(cat)
+                                    }
+                                },
+                                onDeleteCategory = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.deleteCategory(id)
                                     }
                                 },
                                 onUpdatePreferences = { newPrefs ->
@@ -132,9 +164,16 @@ fun MainApp(
     preferences: AppPreferences,
     transactions: List<TransactionItem>,
     budgets: List<CategoryBudgetItem>,
+    accounts: List<AccountItem>,
+    categories: List<CategoryItem>,
     onAddTransaction: (TransactionItem) -> Unit,
     onDeleteTransaction: (String) -> Unit,
     onUpdateBudgetLimit: (String, Long) -> Unit,
+    onAddAccount: (AccountItem) -> Unit,
+    onUpdateAccount: (AccountItem) -> Unit,
+    onDeleteAccount: (String) -> Unit,
+    onAddCategory: (CategoryItem) -> Unit,
+    onDeleteCategory: (String) -> Unit,
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit
@@ -211,6 +250,7 @@ fun MainApp(
                 composable(Screen.Home.route) {
                     HomeScreen(
                         transactions = transactions,
+                        accounts = accounts,
                         onOpenQuickAdd = { type ->
                             quickAddInitialType = type
                             showQuickAddSheet = true
@@ -223,6 +263,9 @@ fun MainApp(
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        },
+                        onNavigateToAccounts = {
+                            navController.navigate(Screen.Accounts.route)
                         },
                         onSelectTransaction = { txn ->
                             selectedTransactionForDetail = txn
@@ -259,9 +302,31 @@ fun MainApp(
                     SettingsScreen(
                         preferences = preferences,
                         transactions = transactions,
+                        accounts = accounts,
+                        categories = categories,
+                        onNavigateToAccounts = {
+                            navController.navigate(Screen.Accounts.route)
+                        },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
                         onClearTransactions = onClearTransactions,
+                        onShowMessage = { msg ->
+                            scope.launch { snackbarHostState.showSnackbar(msg) }
+                        }
+                    )
+                }
+
+                composable(Screen.Accounts.route) {
+                    AccountsAndCategoriesScreen(
+                        accounts = accounts,
+                        categories = categories,
+                        transactions = transactions,
+                        onAddAccount = onAddAccount,
+                        onUpdateAccount = onUpdateAccount,
+                        onDeleteAccount = onDeleteAccount,
+                        onAddCategory = onAddCategory,
+                        onDeleteCategory = onDeleteCategory,
+                        onNavigateBack = { navController.popBackStack() },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
                         }
@@ -275,6 +340,8 @@ fun MainApp(
             QuickAddTransactionSheet(
                 sheetState = quickAddSheetState,
                 initialType = quickAddInitialType,
+                accounts = accounts,
+                categories = categories,
                 onDismiss = { showQuickAddSheet = false },
                 onSaveTransaction = { newTxn ->
                     onAddTransaction(newTxn)

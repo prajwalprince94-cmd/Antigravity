@@ -57,6 +57,8 @@ import com.prajwalprince94.expensetracker.ui.components.glow
 import com.prajwalprince94.expensetracker.ui.components.isWideScreen
 import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
+import com.prajwalprince94.expensetracker.data.model.AccountItem
+import com.prajwalprince94.expensetracker.ui.components.IconRegistry
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
@@ -68,6 +70,7 @@ import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenDark
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreenLight
+import com.prajwalprince94.expensetracker.ui.theme.PillShape
 import com.prajwalprince94.expensetracker.ui.theme.TransferBlue
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
@@ -75,18 +78,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private data class AccountPreview(
-    val name: String,
-    val type: String,
-    val balance: String,
-    val icon: ImageVector
-)
-
 @Composable
 fun HomeScreen(
     transactions: List<TransactionItem>,
+    accounts: List<AccountItem> = emptyList(),
     onOpenQuickAdd: (TransactionType) -> Unit,
     onNavigateToTransactions: () -> Unit,
+    onNavigateToAccounts: () -> Unit = {},
     onSelectTransaction: (TransactionItem) -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -106,11 +104,7 @@ fun HomeScreen(
 
     val netBalancePaise = (totalIncomePaise - totalExpensePaise).coerceAtLeast(0L)
 
-    val accounts = listOf(
-        AccountPreview("Paytm / UPI", "Primary UPI", "₹7,260.00", Icons.Default.PhoneAndroid),
-        AccountPreview("HDFC Bank", "Savings Account", "₹35,000.00", Icons.Default.AccountBalance),
-        AccountPreview("Cash Wallet", "Physical Cash", "₹4,240.00", Icons.Default.Payments)
-    )
+    val effectiveAccounts = if (accounts.isNotEmpty()) accounts else AccountItem.defaultList()
 
     val incomePillBg = if (isDark) Color(0xFF10B981).copy(alpha = 0.16f) else IncomeGreenLight
     val incomePillText = if (isDark) IncomeGreenDark else Color(0xFF059669)
@@ -208,7 +202,12 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         CategoryDistributionCard(transactions = transactions)
-                        AccountsCarousel(accounts = accounts, onShowMessage = onShowMessage)
+                        AccountsCarousel(
+                            accounts = effectiveAccounts,
+                            transactions = transactions,
+                            onNavigateToAccounts = onNavigateToAccounts,
+                            onShowMessage = onShowMessage
+                        )
                     }
                 }
             }
@@ -255,7 +254,12 @@ fun HomeScreen(
 
             // 6. Accounts & Wallets Carousel
             item {
-                AccountsCarousel(accounts = accounts, onShowMessage = onShowMessage)
+                AccountsCarousel(
+                    accounts = effectiveAccounts,
+                    transactions = transactions,
+                    onNavigateToAccounts = onNavigateToAccounts,
+                    onShowMessage = onShowMessage
+                )
             }
         }
 
@@ -551,7 +555,9 @@ private fun QuickActionsRow(
 
 @Composable
 private fun AccountsCarousel(
-    accounts: List<AccountPreview>,
+    accounts: List<AccountItem>,
+    transactions: List<TransactionItem>,
+    onNavigateToAccounts: () -> Unit,
     onShowMessage: (String) -> Unit
 ) {
     Column(
@@ -562,11 +568,21 @@ private fun AccountsCarousel(
         SectionHeader(
             title = "Accounts & Wallets",
             trailing = {
-                Text(
-                    text = "3 Linked",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Surface(
+                    shape = PillShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                        onNavigateToAccounts()
+                    }
+                ) {
+                    Text(
+                        text = "Manage (${accounts.size})",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
             }
         )
 
@@ -574,11 +590,23 @@ private fun AccountsCarousel(
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(accounts) { acc ->
+                val liveBalancePaise = remember(acc, transactions) {
+                    val credited = transactions
+                        .filter { it.type == TransactionType.INCOME && it.account.equals(acc.name, ignoreCase = true) }
+                        .sumOf { it.amountPaise }
+                    val debited = transactions
+                        .filter { it.type == TransactionType.EXPENSE && it.account.equals(acc.name, ignoreCase = true) }
+                        .sumOf { it.amountPaise }
+                    (acc.initialBalancePaise + credited - debited).coerceAtLeast(0L)
+                }
+                val formattedLiveBalance = "₹%,.2f".format(Locale.US, liveBalancePaise / 100.0)
+                val accColor = IconRegistry.parseColor(acc.colorHex)
+
                 GlassCard(
                     modifier = Modifier
                         .width(185.dp)
                         .bouncyClickable(scaleDown = 0.94f) {
-                            onShowMessage("${acc.name} selected: ${acc.balance}")
+                            onNavigateToAccounts()
                         },
                     contentPadding = 16.dp
                 ) {
@@ -587,13 +615,13 @@ private fun AccountsCarousel(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                .background(accColor.copy(alpha = 0.16f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = acc.icon,
+                                imageVector = IconRegistry.getIcon(acc.iconKey),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = accColor,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -616,7 +644,7 @@ private fun AccountsCarousel(
                         fontSize = 11.sp
                     )
                     Text(
-                        text = acc.balance,
+                        text = formattedLiveBalance,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface
