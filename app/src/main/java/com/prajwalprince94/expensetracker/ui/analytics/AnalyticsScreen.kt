@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -75,6 +76,7 @@ fun AnalyticsScreen(
     transactions: List<TransactionItem>,
     budgets: List<CategoryBudgetItem> = emptyList(),
     subscriptions: List<SubscriptionItem> = emptyList(),
+    onOpenPdfExport: () -> Unit = {},
     onNavigateBack: () -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -104,7 +106,7 @@ fun AnalyticsScreen(
             .padding(horizontal = horizontalPadding),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Top Header with Back Button
+        // 1. Top Header with Back Button & PDF Export
         item {
             Spacer(modifier = Modifier.height(6.dp))
             Row(
@@ -141,6 +143,34 @@ fun AnalyticsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+
+                Surface(
+                    shape = ChipShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.bouncyClickable {
+                        haptics.selection()
+                        onOpenPdfExport()
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PictureAsPdf,
+                            contentDescription = "PDF Statement",
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "PDF",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }

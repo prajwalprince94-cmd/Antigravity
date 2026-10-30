@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Security
@@ -111,6 +112,7 @@ fun SettingsScreen(
     onNavigateToBudgets: () -> Unit = {},
     onOpenReceiptScanner: () -> Unit = {},
     onOpenSmsSync: () -> Unit = {},
+    onOpenPdfExport: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -750,6 +752,16 @@ fun SettingsScreen(
                 contentPadding = 12.dp
             ) {
                 Column {
+                    SettingActionRow(
+                        icon = Icons.Default.PictureAsPdf,
+                        title = "Export Statement (PDF & Tax Report)",
+                        subtitle = "Generate official A4 statement with executive summary, category tables & Section 80C/80D tax deductions",
+                        onClick = {
+                            haptics.confirm()
+                            onOpenPdfExport()
+                        }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingActionRow(
                         icon = Icons.Default.FileDownload,
                         title = "Export Statement (CSV)",

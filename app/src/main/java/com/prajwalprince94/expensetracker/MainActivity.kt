@@ -58,6 +58,7 @@ import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
 import com.prajwalprince94.expensetracker.ui.components.LocalReduceMotion
 import com.prajwalprince94.expensetracker.ui.components.QuickAddTransactionSheet
+import com.prajwalprince94.expensetracker.ui.export.PdfExportSheet
 import com.prajwalprince94.expensetracker.ui.components.TransactionDetailSheet
 import com.prajwalprince94.expensetracker.ui.components.UpdateBottomSheet
 import com.prajwalprince94.expensetracker.ui.home.HomeScreen
@@ -364,6 +365,9 @@ fun MainApp(
     var showSmsSyncSheet by remember { mutableStateOf(false) }
     val smsSyncSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    var showPdfExportSheet by remember { mutableStateOf(false) }
+    val pdfExportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(incomingAction) {
         when (incomingAction) {
             MainActivity.ACTION_QUICK_ADD -> {
@@ -500,6 +504,9 @@ fun MainApp(
                         onOpenSmsSync = {
                             showSmsSyncSheet = true
                         },
+                        onOpenPdfExport = {
+                            showPdfExportSheet = true
+                        },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
                         }
@@ -548,6 +555,9 @@ fun MainApp(
                         onOpenSmsSync = {
                             showSmsSyncSheet = true
                         },
+                        onOpenPdfExport = {
+                            showPdfExportSheet = true
+                        },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
                         onClearTransactions = onClearTransactions,
@@ -595,6 +605,9 @@ fun MainApp(
                         transactions = transactions,
                         budgets = budgets,
                         subscriptions = subscriptions,
+                        onOpenPdfExport = {
+                            showPdfExportSheet = true
+                        },
                         onNavigateBack = { navController.popBackStack() },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
@@ -718,6 +731,19 @@ fun MainApp(
                         )
                     }
                 },
+                onShowMessage = { msg ->
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                }
+            )
+        }
+
+        // Advanced PDF Tax Statement & Financial Report Generator
+        if (showPdfExportSheet) {
+            PdfExportSheet(
+                sheetState = pdfExportSheetState,
+                transactions = transactions,
+                accounts = accounts,
+                onDismiss = { showPdfExportSheet = false },
                 onShowMessage = { msg ->
                     scope.launch { snackbarHostState.showSnackbar(msg) }
                 }

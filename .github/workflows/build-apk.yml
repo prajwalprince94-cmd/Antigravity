@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.3.0-pdf-tax-statement.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.1.0-glance-widgets.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.0.0-sms-tracker.apk
@@ -60,32 +61,38 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v3.2.0"
-          name: "Expense Tracker v3.2.0 (Smart Budget Forecasting & AI Insights)"
+          tag_name: "v3.3.0"
+          name: "Expense Tracker v3.3.0 (Advanced PDF Tax Statement & Financial Report Generator)"
           body: |
-            ### 📱 Expense Tracker v3.2.0 (Smart Budget Forecasting & AI Insights)
-            - **Smart Budget Forecasting & Run-Rate Engine (`BudgetForecastEngine`):**
-              - Deterministic spending velocity tracking calculates your exact daily run rate (`₹/day`) and safe daily allowance caps.
-              - **End-of-Month (EOM) Spend Projections:** Evaluates projected month-end totals and flags potential overruns or surplus savings with dual-layer visual progress bars.
-              - **Early Budget Burnout Defense:** Predicts the exact calendar day your budget will exhaust (e.g., "Exhausts in 5 days on Nov 24") and calculates the exact daily spend reduction needed to stay on track.
-              - **Actionable AI-Style Spending Insights:** Contextual cards recommending category-specific daily cuts (e.g., "Cut Dining by ₹180/day to stay within limit") and 48-hour spending surge anomaly detection.
-              - **Category Run-Rate Breakdown:** Detailed per-category burn metrics, projected spend, and real-time health pills.
-            - **Interactive Home Screen Widgets with Jetpack Glance (v3.1.0):**
-              - Real-time balance and 1-tap quick action shortcuts on Android home screen.
-            - **Automated Bank SMS Expense Parser & UPI Tracker (v3.0.0):**
-              - Parses alerts from Indian banks (HDFC, SBI, ICICI, Axis, Kotak, Paytm, PNB, BoB) with on-device privacy.
-            - **Smart Receipt OCR & Document Scanner (v2.9.0):**
-              - Camera and gallery on-device text recognition.
+            ### 📱 Expense Tracker v3.3.0 (Advanced PDF Tax Statement & Financial Report Generator)
+            - **Native 100% Offline A4 PDF Generation Engine (`PdfStatementGenerator`):**
+              - Uses pure Android `android.graphics.pdf.PdfDocument` with zero third-party cloud dependencies or tracking.
+              - **Executive Summary Financial Cards:** Header cards highlighting Total Credits (Income), Debits (Expenses), Net Surplus / Savings, and Savings Rate % with color-coded typography.
+              - **Tax Deductions & Exemption Summary:** Automatic Section 80C, Section 80D (Health Insurance), and business travel itemized deduction breakdown with tax calculation notes.
+              - **Top Spending Categories Distribution Table:** Sorted category rankings, percentage of total expenditure, and visual contribution bars.
+              - **Paginated Chronological Ledger:** Multi-page table with zebra striping, date formatting, category tags, payment mode, and debit/credit columns.
+              - **Document Integrity & Verification:** Unique verification SHA-256 hash stamp, confidentiality disclosure, and dynamic page numbering ("Page X of Y").
+            - **Publication-Ready Interactive Export Sheet (`PdfExportSheet`):**
+              - Period filter chips (`Current Month`, `Last Month`, `Last 3 Months`, `YTD`, `Full Year`, `All Time`).
+              - Target account filter chips (`All Accounts`, Bank, Cash, Credit Card, UPI).
+              - Tax deductions breakdown toggle switch.
+              - Live summary preview card before exporting.
+              - Dual actions: **"Print / View"** (opens system PDF viewer/Android Print Service) and **"Share PDF"** (shares via FileProvider to WhatsApp, Email, Drive).
+            - **Smart Budget Forecasting & AI Insights (v3.2.0)**
+            - **Interactive Home Screen Widgets with Jetpack Glance (v3.1.0)**
+            - **Automated Bank SMS Expense Parser & UPI Tracker (v3.0.0)**
+            - **Smart Receipt OCR & Document Scanner (v2.9.0)**
             - **Split Expense & Group Bill Splitting Suite (v2.8.0)**
             - **Financial Health & Analytics Dashboard (v2.7.0)**
             - **Recurring Subscriptions & Scheduled Bills (v2.6.0)**
             - **Biometric & PIN Security Suite (v2.5.0)**
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v3.2.0-budget-forecast.apk`** below under Assets.
+            Download **`ExpenseTracker-v3.3.0-pdf-tax-statement.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v3.3.0-pdf-tax-statement.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.1.0-glance-widgets.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.0.0-sms-tracker.apk
