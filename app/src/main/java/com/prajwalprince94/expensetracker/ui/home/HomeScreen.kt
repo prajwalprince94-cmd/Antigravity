@@ -24,12 +24,15 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SwapHoriz
+import com.prajwalprince94.expensetracker.data.analytics.FinancialHealthAnalyzer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -89,6 +92,7 @@ fun HomeScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToAccounts: () -> Unit = {},
     onNavigateToSubscriptions: () -> Unit = {},
+    onNavigateToAnalytics: () -> Unit = {},
     onLogSubscriptionPayment: (String) -> Unit = {},
     onSelectTransaction: (TransactionItem) -> Unit,
     onShowMessage: (String) -> Unit,
@@ -206,6 +210,11 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        FinancialHealthBanner(
+                            transactions = transactions,
+                            subscriptions = subscriptions,
+                            onNavigateToAnalytics = onNavigateToAnalytics
+                        )
                         CategoryDistributionCard(transactions = transactions)
                         AccountsCarousel(
                             accounts = effectiveAccounts,
@@ -238,6 +247,16 @@ fun HomeScreen(
                 QuickActionsRow(
                     onOpenQuickAdd = onOpenQuickAdd,
                     onShowMessage = onShowMessage
+                )
+            }
+
+            // 3.5 Financial Health & Analytics Banner
+            item {
+                FinancialHealthBanner(
+                    transactions = transactions,
+                    subscriptions = subscriptions,
+                    onNavigateToAnalytics = onNavigateToAnalytics,
+                    modifier = Modifier.entrance(2)
                 )
             }
 
@@ -850,6 +869,114 @@ private fun UpcomingBillsCarousel(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinancialHealthBanner(
+    transactions: List<TransactionItem>,
+    subscriptions: List<SubscriptionItem>,
+    onNavigateToAnalytics: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptics = rememberAppHaptics()
+    val report = remember(transactions, subscriptions) {
+        FinancialHealthAnalyzer.analyze(
+            transactions = transactions,
+            subscriptions = subscriptions
+        )
+    }
+    val tierColor = IconRegistry.parseColor(report.tier.colorHex)
+
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .bouncyClickable(scaleDown = 0.96f) {
+                haptics.confirm()
+                onNavigateToAnalytics()
+            },
+        contentPadding = 14.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(tierColor.copy(alpha = 0.16f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Speed,
+                    contentDescription = null,
+                    tint = tierColor,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Financial Health: ${report.overallScore}/100",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        shape = PillShape,
+                        color = tierColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = report.tier.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = tierColor,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Burn: ${report.formattedDailyBurn}/day • %.0f%% saved • ${report.daysRemainingInMonth}d left".format(report.savingsRatePercent.coerceAtLeast(0f)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp
+                )
+            }
+
+            Surface(
+                shape = ChipShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                    haptics.confirm()
+                    onNavigateToAnalytics()
+                }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Analytics",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
             }
         }

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Timer
 import com.prajwalprince94.expensetracker.security.BiometricSecurityManager
@@ -99,6 +100,7 @@ fun SettingsScreen(
     subscriptions: List<SubscriptionItem> = emptyList(),
     onNavigateToAccounts: () -> Unit = {},
     onNavigateToSubscriptions: () -> Unit = {},
+    onNavigateToAnalytics: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -587,6 +589,28 @@ fun SettingsScreen(
                     onClick = {
                         haptics.confirm()
                         onNavigateToSubscriptions()
+                    }
+                )
+            }
+        }
+
+        // 5.7 Financial Health & Analytics
+        item {
+            SectionHeader(title = "Financial Health & Analytics", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.Speed,
+                    title = "Financial Health & Projections",
+                    subtitle = "0-100 Score • Burn Rate Forecast • MoM Trends",
+                    onClick = {
+                        haptics.confirm()
+                        onNavigateToAnalytics()
                     }
                 )
             }

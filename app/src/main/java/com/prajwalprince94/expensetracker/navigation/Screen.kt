@@ -67,6 +67,13 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.CalendarMonth
     )
 
+    object Analytics : Screen(
+        route = "analytics",
+        title = "Financial Health",
+        selectedIcon = Icons.Filled.BarChart,
+        unselectedIcon = Icons.Outlined.BarChart
+    )
+
     companion object {
         val bottomNavItems = listOf(Home, Transactions, Budgets, Settings)
     }

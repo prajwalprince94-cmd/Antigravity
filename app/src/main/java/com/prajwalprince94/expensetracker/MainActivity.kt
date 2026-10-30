@@ -48,6 +48,7 @@ import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.navigation.Screen
 import com.prajwalprince94.expensetracker.ui.accounts.AccountsAndCategoriesScreen
+import com.prajwalprince94.expensetracker.ui.analytics.AnalyticsScreen
 import com.prajwalprince94.expensetracker.ui.budgets.BudgetsScreen
 import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
@@ -353,6 +354,9 @@ fun MainApp(
                         onNavigateToSubscriptions = {
                             navController.navigate(Screen.Subscriptions.route)
                         },
+                        onNavigateToAnalytics = {
+                            navController.navigate(Screen.Analytics.route)
+                        },
                         onLogSubscriptionPayment = onLogSubscriptionPayment,
                         onSelectTransaction = { txn ->
                             selectedTransactionForDetail = txn
@@ -379,6 +383,9 @@ fun MainApp(
                     BudgetsScreen(
                         budgetItems = budgets,
                         onUpdateBudgetLimit = onUpdateBudgetLimit,
+                        onNavigateToAnalytics = {
+                            navController.navigate(Screen.Analytics.route)
+                        },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
                         }
@@ -397,6 +404,9 @@ fun MainApp(
                         },
                         onNavigateToSubscriptions = {
                             navController.navigate(Screen.Subscriptions.route)
+                        },
+                        onNavigateToAnalytics = {
+                            navController.navigate(Screen.Analytics.route)
                         },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
@@ -433,6 +443,18 @@ fun MainApp(
                         onUpdateSubscription = onUpdateSubscription,
                         onDeleteSubscription = onDeleteSubscription,
                         onLogPayment = onLogSubscriptionPayment,
+                        onNavigateBack = { navController.popBackStack() },
+                        onShowMessage = { msg ->
+                            scope.launch { snackbarHostState.showSnackbar(msg) }
+                        }
+                    )
+                }
+
+                composable(Screen.Analytics.route) {
+                    AnalyticsScreen(
+                        transactions = transactions,
+                        budgets = budgets,
+                        subscriptions = subscriptions,
                         onNavigateBack = { navController.popBackStack() },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }

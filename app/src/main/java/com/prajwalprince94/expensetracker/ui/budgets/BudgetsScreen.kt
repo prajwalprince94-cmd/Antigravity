@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -73,6 +74,7 @@ import java.util.Locale
 fun BudgetsScreen(
     budgetItems: List<CategoryBudgetItem>,
     onUpdateBudgetLimit: (String, Long) -> Unit,
+    onNavigateToAnalytics: () -> Unit = {},
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -126,22 +128,54 @@ fun BudgetsScreen(
                     )
                 }
 
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .bouncyClickable(scaleDown = 0.88f) {
-                            onShowMessage("Tap any budget category below to adjust its monthly limit.")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = ChipShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
+                            haptics.confirm()
+                            onNavigateToAnalytics()
                         }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "New Budget",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(22.dp)
-                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Speed,
+                                contentDescription = "Financial Health",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Health",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .bouncyClickable(scaleDown = 0.88f) {
+                                onShowMessage("Tap any budget category below to adjust its monthly limit.")
+                            }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "New Budget",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
