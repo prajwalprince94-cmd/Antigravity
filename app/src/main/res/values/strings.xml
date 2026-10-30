@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Expense Tracker</string>
+    <string name="widget_description">Glanceable Net Balance, Budget Progress &amp; 1-Tap Quick Action Shortcuts</string>
 </resources>

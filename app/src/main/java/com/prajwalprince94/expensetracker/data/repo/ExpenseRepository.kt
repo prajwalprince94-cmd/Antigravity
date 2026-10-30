@@ -28,6 +28,7 @@ class ExpenseRepository(
     private val scope: CoroutineScope
 ) {
     private val dbHelper = ExpenseDatabaseHelper(context.applicationContext)
+    private val appContext = context.applicationContext
 
     private val _transactions = MutableStateFlow<List<TransactionItem>>(emptyList())
     val transactions: StateFlow<List<TransactionItem>> = _transactions.asStateFlow()
@@ -82,6 +83,15 @@ class ExpenseRepository(
         _splitGroups.value = sGroups
         _splitBills.value = sBills
         _isLoaded.value = true
+        triggerWidgetUpdate()
+    }
+
+    private fun triggerWidgetUpdate() {
+        scope.launch(Dispatchers.IO) {
+            try {
+                com.prajwalprince94.expensetracker.widget.ExpenseGlanceWidget.update(appContext)
+            } catch (_: Exception) {}
+        }
     }
 
     // --- Transactions ---
@@ -94,6 +104,7 @@ class ExpenseRepository(
             val updatedBudgets = dbHelper.getAllBudgets()
             _transactions.value = updatedTxns
             _budgets.value = updatedBudgets
+            triggerWidgetUpdate()
         }
         success
     }
@@ -111,6 +122,7 @@ class ExpenseRepository(
             val updatedBudgets = dbHelper.getAllBudgets()
             _transactions.value = updatedTxns
             _budgets.value = updatedBudgets
+            triggerWidgetUpdate()
         }
         count
     }
@@ -123,6 +135,7 @@ class ExpenseRepository(
             val updatedBudgets = dbHelper.getAllBudgets()
             _transactions.value = updatedTxns
             _budgets.value = updatedBudgets
+            triggerWidgetUpdate()
         }
         success
     }
@@ -135,6 +148,7 @@ class ExpenseRepository(
             val updatedBudgets = dbHelper.getAllBudgets()
             _transactions.value = updatedTxns
             _budgets.value = updatedBudgets
+            triggerWidgetUpdate()
         }
         success
     }

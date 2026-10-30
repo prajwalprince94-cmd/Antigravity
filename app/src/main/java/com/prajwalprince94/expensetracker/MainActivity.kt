@@ -1,5 +1,6 @@
 package com.prajwalprince94.expensetracker
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -74,8 +75,17 @@ import com.prajwalprince94.expensetracker.ui.transaction.TransactionsScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : FragmentActivity() {
+    private var incomingAction by mutableStateOf<String?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        incomingAction = intent.action
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        incomingAction = intent?.action
         ExpenseGraph.ensureInit(this)
         enableEdgeToEdge()
 
@@ -271,13 +281,21 @@ class MainActivity : FragmentActivity() {
                                     ExpenseGraph.appScope.launch {
                                         repository.clearTransactions()
                                     }
-                                }
+                                },
+                                incomingAction = incomingAction,
+                                onClearIncomingAction = { incomingAction = null }
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    companion object {
+        const val ACTION_QUICK_ADD = "com.prajwalprince94.expensetracker.ACTION_QUICK_ADD"
+        const val ACTION_SCAN_RECEIPT = "com.prajwalprince94.expensetracker.ACTION_SCAN_RECEIPT"
+        const val ACTION_SMS_SYNC = "com.prajwalprince94.expensetracker.ACTION_SMS_SYNC"
     }
 }
 
@@ -313,7 +331,9 @@ fun MainApp(
     onSettleDebt: (groupId: String, fromMember: String, toMember: String, amountPaise: Long, accountName: String) -> Unit = { _, _, _, _, _ -> },
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
-    onClearTransactions: () -> Unit
+    onClearTransactions: () -> Unit,
+    incomingAction: String? = null,
+    onClearIncomingAction: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -338,6 +358,23 @@ fun MainApp(
 
     var showSmsSyncSheet by remember { mutableStateOf(false) }
     val smsSyncSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(incomingAction) {
+        when (incomingAction) {
+            MainActivity.ACTION_QUICK_ADD -> {
+                showQuickAddSheet = true
+                onClearIncomingAction()
+            }
+            MainActivity.ACTION_SCAN_RECEIPT -> {
+                showReceiptScannerSheet = true
+                onClearIncomingAction()
+            }
+            MainActivity.ACTION_SMS_SYNC -> {
+                showSmsSyncSheet = true
+                onClearIncomingAction()
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         try {

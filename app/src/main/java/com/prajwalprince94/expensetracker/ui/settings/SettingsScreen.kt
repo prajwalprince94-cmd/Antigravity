@@ -40,8 +40,10 @@ import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Widgets
 import com.prajwalprince94.expensetracker.security.BiometricSecurityManager
 import com.prajwalprince94.expensetracker.ui.security.PinSetupBottomSheet
+import com.prajwalprince94.expensetracker.widget.ExpenseGlanceWidget
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -683,6 +685,31 @@ fun SettingsScreen(
                     onClick = {
                         haptics.confirm()
                         onOpenSmsSync()
+                    }
+                )
+            }
+        }
+
+        // 5.11 Interactive Home Screen Widgets (Jetpack Glance)
+        item {
+            SectionHeader(title = "Home Screen Widget (Jetpack Glance)", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.Widgets,
+                    title = "Expense Glance Widget (v3.1)",
+                    subtitle = "Touch & hold home screen → Widgets → Expense Tracker to place real-time balance & 1-tap launchers. Tap here to sync widget.",
+                    onClick = {
+                        haptics.confirm()
+                        scope.launch {
+                            ExpenseGlanceWidget.update(context)
+                            onShowMessage("Home screen widget updated with latest balance & budgets!")
+                        }
                     }
                 )
             }
