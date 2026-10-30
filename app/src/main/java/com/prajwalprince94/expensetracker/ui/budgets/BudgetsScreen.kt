@@ -46,7 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.data.forecast.BudgetForecastEngine
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
+import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
 import com.prajwalprince94.expensetracker.ui.components.EmptyStateView
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
@@ -73,6 +75,7 @@ import java.util.Locale
 @Composable
 fun BudgetsScreen(
     budgetItems: List<CategoryBudgetItem>,
+    transactions: List<TransactionItem> = emptyList(),
     onUpdateBudgetLimit: (String, Long) -> Unit,
     onNavigateToAnalytics: () -> Unit = {},
     onShowMessage: (String) -> Unit,
@@ -83,6 +86,10 @@ fun BudgetsScreen(
     val wide = isWideScreen()
     val horizontalPadding = responsiveHorizontalPadding()
     val haptics = rememberAppHaptics()
+
+    val forecast = remember(budgetItems, transactions) {
+        BudgetForecastEngine.generateForecast(budgetItems, transactions)
+    }
 
     val totalSpentPaise = budgetItems.sumOf { it.spentPaise }
     val totalLimitPaise = budgetItems.sumOf { it.limitPaise }
@@ -264,6 +271,14 @@ fun BudgetsScreen(
             }
         }
 
+        // 2.5 Smart Budget Forecasting & Velocity Card (v3.2)
+        item {
+            BudgetForecastCard(
+                forecast = forecast,
+                modifier = Modifier.entrance(1)
+            )
+        }
+
         // 3. Category Budgets Header
         item {
             SectionHeader(
@@ -381,8 +396,22 @@ fun BudgetsScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val catForecast = forecast.categoryForecasts.find { it.categoryId == budget.id || it.categoryName == budget.categoryName }
+                        if (catForecast != null) {
+                            val catStatusColor = Color(catForecast.status.colorHex)
+                            Text(
+                                text = "Proj. ${catForecast.formattedProjectedSpend} • ${catForecast.status.label}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = catStatusColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.width(1.dp))
+                        }
+
                         Row(
                             modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
                                 editingBudget = budget

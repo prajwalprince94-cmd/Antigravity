@@ -509,6 +509,7 @@ fun MainApp(
                 composable(Screen.Budgets.route) {
                     BudgetsScreen(
                         budgetItems = budgets,
+                        transactions = transactions,
                         onUpdateBudgetLimit = onUpdateBudgetLimit,
                         onNavigateToAnalytics = {
                             navController.navigate(Screen.Analytics.route)
@@ -537,6 +538,9 @@ fun MainApp(
                         },
                         onNavigateToSplit = {
                             navController.navigate(Screen.SplitGroups.route)
+                        },
+                        onNavigateToBudgets = {
+                            navController.navigate(Screen.Budgets.route)
                         },
                         onOpenReceiptScanner = {
                             showReceiptScannerSheet = true

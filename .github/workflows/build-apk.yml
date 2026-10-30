@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.1.0-glance-widgets.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.0.0-sms-tracker.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.9.0-receipt-ocr.apk
@@ -59,19 +60,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v3.1.0"
-          name: "Expense Tracker v3.1.0 (Interactive Home Screen Widgets)"
+          tag_name: "v3.2.0"
+          name: "Expense Tracker v3.2.0 (Smart Budget Forecasting & AI Insights)"
           body: |
-            ### 📱 Expense Tracker v3.1.0 (Interactive Home Screen Widgets)
-            - **Interactive Home Screen Widgets (Jetpack Glance):**
-              - Native Android App Widget built using modern Jetpack Glance & platform canonical layout guidelines (`androidx.glance:glance-appwidget:1.1.1`).
-              - Real-time Net Balance & monthly income/expense summary card right on your Android home screen.
-              - Monthly budget utilization status badge.
-              - **1-Tap Quick Action Launchers:**
-                - `+ Expense`: Opens the instant transaction entry bottom sheet.
-                - `Scan OCR`: Launches on-device smart receipt scanner.
-                - `SMS Sync`: Launches automated bank & UPI SMS inbox sync.
-              - **Live Reactive Auto-Sync:** Widget automatically updates on every database mutation (add, edit, delete transactions or budget adjustments).
+            ### 📱 Expense Tracker v3.2.0 (Smart Budget Forecasting & AI Insights)
+            - **Smart Budget Forecasting & Run-Rate Engine (`BudgetForecastEngine`):**
+              - Deterministic spending velocity tracking calculates your exact daily run rate (`₹/day`) and safe daily allowance caps.
+              - **End-of-Month (EOM) Spend Projections:** Evaluates projected month-end totals and flags potential overruns or surplus savings with dual-layer visual progress bars.
+              - **Early Budget Burnout Defense:** Predicts the exact calendar day your budget will exhaust (e.g., "Exhausts in 5 days on Nov 24") and calculates the exact daily spend reduction needed to stay on track.
+              - **Actionable AI-Style Spending Insights:** Contextual cards recommending category-specific daily cuts (e.g., "Cut Dining by ₹180/day to stay within limit") and 48-hour spending surge anomaly detection.
+              - **Category Run-Rate Breakdown:** Detailed per-category burn metrics, projected spend, and real-time health pills.
+            - **Interactive Home Screen Widgets with Jetpack Glance (v3.1.0):**
+              - Real-time balance and 1-tap quick action shortcuts on Android home screen.
             - **Automated Bank SMS Expense Parser & UPI Tracker (v3.0.0):**
               - Parses alerts from Indian banks (HDFC, SBI, ICICI, Axis, Kotak, Paytm, PNB, BoB) with on-device privacy.
             - **Smart Receipt OCR & Document Scanner (v2.9.0):**
@@ -82,10 +82,11 @@ jobs:
             - **Biometric & PIN Security Suite (v2.5.0)**
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v3.1.0-glance-widgets.apk`** below under Assets.
+            Download **`ExpenseTracker-v3.2.0-budget-forecast.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.1.0-glance-widgets.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.0.0-sms-tracker.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.9.0-receipt-ocr.apk

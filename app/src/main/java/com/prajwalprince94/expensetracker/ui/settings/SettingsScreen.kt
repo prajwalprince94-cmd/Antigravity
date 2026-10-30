@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
@@ -107,6 +108,7 @@ fun SettingsScreen(
     onNavigateToSubscriptions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToSplit: () -> Unit = {},
+    onNavigateToBudgets: () -> Unit = {},
     onOpenReceiptScanner: () -> Unit = {},
     onOpenSmsSync: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
@@ -710,6 +712,28 @@ fun SettingsScreen(
                             ExpenseGlanceWidget.update(context)
                             onShowMessage("Home screen widget updated with latest balance & budgets!")
                         }
+                    }
+                )
+            }
+        }
+
+        // 5.12 Smart Budget Forecasting & AI Insights (v3.2)
+        item {
+            SectionHeader(title = "Budget Velocity & Forecasting (v3.2)", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.Insights,
+                    title = "End-of-Month Projections & Burnout Defense",
+                    subtitle = "Run-rate modeling calculates daily velocity, projected spend & early budget exhaustion warnings",
+                    onClick = {
+                        haptics.confirm()
+                        onNavigateToBudgets()
                     }
                 )
             }
