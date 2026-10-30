@@ -116,7 +116,9 @@ fun TransactionsScreen(
 
             // Quick CSV Export Button
             Surface(
-                onClick = {
+                shape = ChipShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.bouncyClickable {
                     haptics.confirm()
                     if (filteredList.isEmpty()) {
                         onShowMessage?.invoke("No transactions to export for current filter")
@@ -128,10 +130,7 @@ fun TransactionsScreen(
                             onShowMessage?.invoke("Export failed: ${err.message}")
                         }
                     }
-                },
-                shape = ChipShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.bouncyClickable()
+                }
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
