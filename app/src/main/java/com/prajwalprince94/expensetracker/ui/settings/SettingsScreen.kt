@@ -62,12 +62,17 @@ import com.prajwalprince94.expensetracker.ui.components.UpdateBottomSheet
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
+import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
 import com.prajwalprince94.expensetracker.ui.model.AppPalette
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.ColorStyle
 import com.prajwalprince94.expensetracker.ui.model.ThemeMode
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
+import com.prajwalprince94.expensetracker.ui.theme.CardShape
+import com.prajwalprince94.expensetracker.ui.theme.ChipShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
+import com.prajwalprince94.expensetracker.ui.theme.PillShape
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,6 +85,7 @@ fun SettingsScreen(
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptics = rememberAppHaptics()
     var isAppLockEnabled by remember { mutableStateOf(false) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfoToDisplay by remember { mutableStateOf<AppUpdateInfo?>(null) }
@@ -132,10 +138,11 @@ fun SettingsScreen(
                                 .weight(1f)
                                 .height(44.dp)
                                 .bouncyClickable(scaleDown = 0.92f) {
+                                    haptics.selection()
                                     onUpdatePreferences(preferences.copy(themeMode = mode))
                                     onShowMessage("Theme set to ${mode.name.lowercase()}")
                                 },
-                            shape = RoundedCornerShape(16.dp),
+                            shape = PillShape,
                             color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -183,10 +190,11 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .height(40.dp)
                                 .bouncyClickable(scaleDown = 0.92f) {
+                                    haptics.selection()
                                     onUpdatePreferences(preferences.copy(palette = palette))
                                     onShowMessage("${palette.displayName} palette applied")
                                 },
-                            shape = RoundedCornerShape(14.dp),
+                            shape = ChipShape,
                             color = if (isSelected) previewColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceContainerHigh,
                             border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, previewColor) else null
                         ) {
@@ -225,9 +233,10 @@ fun SettingsScreen(
                     items(ColorStyle.values()) { style ->
                         val isSelected = preferences.colorStyle == style
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ChipShape,
                             color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
                             modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                                haptics.selection()
                                 onUpdatePreferences(preferences.copy(colorStyle = style))
                                 onShowMessage("${style.displayName} style applied")
                             }
@@ -357,10 +366,11 @@ fun SettingsScreen(
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = ButtonShape,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
                             if (!isCheckingUpdate) {
+                                haptics.light()
                                 isCheckingUpdate = true
                                 onShowMessage("Checking for latest release...")
                                 scope.launch {
@@ -399,6 +409,7 @@ fun SettingsScreen(
                         title = "Reset Sample Data",
                         subtitle = "Restore default transactions & budget allocations",
                         onClick = {
+                            haptics.confirm()
                             onResetDatabase()
                             onShowMessage("Database reset to factory sample data")
                         }
@@ -409,6 +420,7 @@ fun SettingsScreen(
                         title = "Clear All Transactions",
                         subtitle = "Remove all expense and income records from SQLite storage",
                         onClick = {
+                            haptics.confirm()
                             onClearTransactions()
                             onShowMessage("All transactions cleared from database")
                         }

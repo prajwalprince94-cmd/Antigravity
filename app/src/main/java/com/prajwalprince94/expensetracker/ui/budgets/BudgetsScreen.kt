@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
+import com.prajwalprince94.expensetracker.ui.components.EmptyStateView
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
@@ -53,9 +55,15 @@ import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.components.isWideScreen
+import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
+import com.prajwalprince94.expensetracker.ui.theme.CardShape
+import com.prajwalprince94.expensetracker.ui.theme.ChipShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
+import com.prajwalprince94.expensetracker.ui.theme.LargeCardShape
+import com.prajwalprince94.expensetracker.ui.theme.SheetShape
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -72,6 +80,7 @@ fun BudgetsScreen(
     val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val wide = isWideScreen()
     val horizontalPadding = responsiveHorizontalPadding()
+    val haptics = rememberAppHaptics()
 
     val totalSpentPaise = budgetItems.sumOf { it.spentPaise }
     val totalLimitPaise = budgetItems.sumOf { it.limitPaise }
@@ -238,115 +247,128 @@ fun BudgetsScreen(
         }
 
         // 4. Budget Items with Stride GlassCard & Edit Action
-        items(budgetItems) { budget ->
-            val isOver = budget.isOverBudget
-            val progressColor = if (isOver) ExpenseRed else if (budget.progress > 0.8f) Color(0xFFFF9800) else IncomeGreen
+        if (budgetItems.isEmpty()) {
+            item {
+                EmptyStateView(
+                    icon = Icons.Default.AccountBalanceWallet,
+                    title = "No Budgets Configured",
+                    subtitle = "Set monthly spending limits for categories like Food, Fuel, and Bills to stay on track.",
+                    actionLabel = "Setup Budgets",
+                    onAction = { onShowMessage("Tap + at the top right to configure your monthly limits.") },
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+            }
+        } else {
+            items(budgetItems) { budget ->
+                val isOver = budget.isOverBudget
+                val progressColor = if (isOver) ExpenseRed else if (budget.progress > 0.8f) Color(0xFFFF9800) else IncomeGreen
 
-            GlassCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .bouncyClickable(scaleDown = 0.96f) {
-                        editingBudget = budget
-                    },
-                contentPadding = 16.dp
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = budget.icon,
-                            contentDescription = budget.category,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = budget.category,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            StatusPill(
-                                label = if (isOver) "Exceeded" else "%.0f%%".format(budget.progress * 100),
-                                color = progressColor
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Spent: ₹%,.0f".format(budget.spentPaise / 100.0),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Limit: ₹%,.0f".format(budget.limitPaise / 100.0),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LinearProgressIndicator(
-                    progress = { budget.progress.coerceIn(0f, 1f) },
+                GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = progressColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Row(
-                        modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
+                        .bouncyClickable(scaleDown = 0.96f) {
                             editingBudget = budget
                         },
+                    contentPadding = 16.dp
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Edit Limit",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = budget.icon,
+                                contentDescription = budget.category,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = budget.category,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                StatusPill(
+                                    label = if (isOver) "Exceeded" else "%.0f%%".format(budget.progress * 100),
+                                    color = progressColor
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Spent: ₹%,.0f".format(budget.spentPaise / 100.0),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Limit: ₹%,.0f".format(budget.limitPaise / 100.0),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LinearProgressIndicator(
+                        progress = { budget.progress.coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = progressColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Row(
+                            modifier = Modifier.bouncyClickable(scaleDown = 0.92f) {
+                                editingBudget = budget
+                            },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Edit Limit",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -362,7 +384,7 @@ fun BudgetsScreen(
         ModalBottomSheet(
             onDismissRequest = { editingBudget = null },
             sheetState = editSheetState,
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            shape = SheetShape,
             containerColor = MaterialTheme.colorScheme.surface
         ) {
             Column(
@@ -410,6 +432,9 @@ fun BudgetsScreen(
                     value = itemToEdit.limitPaise.toFloat(),
                     onValueChange = { newFloat ->
                         val roundedPaise = (newFloat.toLong() / 50000L) * 50000L
+                        if (roundedPaise != itemToEdit.limitPaise) {
+                            haptics.selection()
+                        }
                         onUpdateBudgetLimit(itemToEdit.id, roundedPaise)
                         editingBudget = itemToEdit.copy(limitPaise = roundedPaise)
                     },
@@ -436,11 +461,12 @@ fun BudgetsScreen(
                                 .weight(1f)
                                 .height(44.dp)
                                 .bouncyClickable(scaleDown = 0.9f) {
+                                    haptics.light()
                                     val newLimit = (itemToEdit.limitPaise + delta).coerceIn(100000L, 5000000L)
                                     onUpdateBudgetLimit(itemToEdit.id, newLimit)
                                     editingBudget = itemToEdit.copy(limitPaise = newLimit)
                                 },
-                            shape = RoundedCornerShape(14.dp),
+                            shape = ChipShape,
                             color = MaterialTheme.colorScheme.surfaceContainerHigh
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -462,10 +488,11 @@ fun BudgetsScreen(
                         .fillMaxWidth()
                         .height(52.dp)
                         .bouncyClickable(scaleDown = 0.94f) {
+                            haptics.confirm()
                             onShowMessage("Saved ${itemToEdit.category} limit: ₹%,.0f".format(itemToEdit.limitPaise / 100.0))
                             editingBudget = null
                         },
-                    shape = RoundedCornerShape(18.dp),
+                    shape = ButtonShape,
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     Box(contentAlignment = Alignment.Center) {

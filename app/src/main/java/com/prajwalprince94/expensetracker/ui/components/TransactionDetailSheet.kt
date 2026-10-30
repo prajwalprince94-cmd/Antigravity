@@ -36,11 +36,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
+import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedDark
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
+import com.prajwalprince94.expensetracker.ui.theme.SheetShape
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 
@@ -52,6 +55,7 @@ fun TransactionDetailSheet(
     onDismiss: () -> Unit,
     onDelete: (String) -> Unit
 ) {
+    val haptics = rememberAppHaptics()
     val isDark = isSystemInDarkTheme()
     val tintColor = getFinancialColor(transaction.type, isDark)
     val bgColor = getFinancialContainerColor(transaction.type, isDark)
@@ -59,7 +63,7 @@ fun TransactionDetailSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        shape = SheetShape,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -146,10 +150,11 @@ fun TransactionDetailSheet(
                     .fillMaxWidth()
                     .height(52.dp)
                     .bouncyClickable(scaleDown = 0.94f) {
+                        haptics.confirm()
                         onDelete(transaction.id)
                         onDismiss()
                     },
-                shape = RoundedCornerShape(18.dp),
+                shape = ButtonShape,
                 color = deleteBtnBg,
                 border = BorderStroke(1.dp, deleteBtnBorder)
             ) {

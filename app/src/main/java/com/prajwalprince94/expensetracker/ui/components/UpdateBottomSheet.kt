@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
+import com.prajwalprince94.expensetracker.ui.theme.SheetShape
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +59,7 @@ fun UpdateBottomSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onShowMessage: (String) -> Unit = {}
 ) {
+    val haptics = rememberAppHaptics()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isDownloading by remember { mutableStateOf(false) }
@@ -74,7 +77,7 @@ fun UpdateBottomSheet(
             if (!isDownloading) onDismiss()
         },
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = SheetShape,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -222,6 +225,7 @@ fun UpdateBottomSheet(
                         .fillMaxWidth()
                         .height(54.dp)
                         .bouncyClickable(scaleDown = 0.94f) {
+                            haptics.confirm()
                             errorMessage = null
                             isDownloading = true
                             downloadProgress = 0f
@@ -243,7 +247,7 @@ fun UpdateBottomSheet(
                                 isDownloading = false
                             }
                         },
-                    shape = RoundedCornerShape(20.dp),
+                    shape = ButtonShape,
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     Row(
@@ -273,9 +277,10 @@ fun UpdateBottomSheet(
                         .fillMaxWidth()
                         .height(54.dp)
                         .bouncyClickable(scaleDown = 0.94f) {
+                            haptics.confirm()
                             AppUpdateManager.launchApkInstaller(context, downloadedFile)
                         },
-                    shape = RoundedCornerShape(20.dp),
+                    shape = ButtonShape,
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     Row(

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.ui.components.AnimatedRupeeTicker
 import com.prajwalprince94.expensetracker.ui.components.CategoryDistributionCard
+import com.prajwalprince94.expensetracker.ui.components.EmptyStateView
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.SectionHeader
 import com.prajwalprince94.expensetracker.ui.components.SpendingTrendLineChart
@@ -53,9 +55,13 @@ import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.components.glow
 import com.prajwalprince94.expensetracker.ui.components.isWideScreen
+import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
+import com.prajwalprince94.expensetracker.ui.theme.CardShape
+import com.prajwalprince94.expensetracker.ui.theme.ChipShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedDark
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRedLight
@@ -88,6 +94,7 @@ fun HomeScreen(
     val isDark = isSystemInDarkTheme()
     val wide = isWideScreen()
     val horizontalPadding = responsiveHorizontalPadding()
+    val haptics = rememberAppHaptics()
 
     val totalIncomePaise = transactions
         .filter { it.type == TransactionType.INCOME }
@@ -147,6 +154,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(44.dp)
                         .bouncyClickable(scaleDown = 0.88f) {
+                            haptics.light()
                             onShowMessage("All caught up! No unread notifications.")
                         }
                 ) {
@@ -271,67 +279,80 @@ fun HomeScreen(
         }
 
         // Recent Transaction Items
-        val recentList = transactions.take(5)
-        items(recentList) { txn ->
-            val tintColor = getFinancialColor(txn.type, isDark)
-            val bgColor = getFinancialContainerColor(txn.type, isDark)
+        if (transactions.isEmpty()) {
+            item {
+                EmptyStateView(
+                    icon = Icons.Default.ReceiptLong,
+                    title = "No Transactions Yet",
+                    subtitle = "Tap below or use the quick action buttons to log your first income, expense, or transfer.",
+                    actionLabel = "+ Add Transaction",
+                    onAction = { onOpenQuickAdd(TransactionType.EXPENSE) },
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+            }
+        } else {
+            val recentList = transactions.take(5)
+            items(recentList) { txn ->
+                val tintColor = getFinancialColor(txn.type, isDark)
+                val bgColor = getFinancialContainerColor(txn.type, isDark)
 
-            GlassCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .bouncyClickable(scaleDown = 0.95f) {
-                        onSelectTransaction(txn)
-                    },
-                contentPadding = 14.dp
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bouncyClickable(scaleDown = 0.95f) {
+                            onSelectTransaction(txn)
+                        },
+                    contentPadding = 14.dp
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(bgColor),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = txn.icon,
-                            contentDescription = txn.category,
-                            tint = tintColor,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = txn.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusPill(
-                                label = txn.type.name,
-                                color = tintColor
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "${txn.category} • ${txn.formattedDate}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(bgColor),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = txn.icon,
+                                contentDescription = txn.category,
+                                tint = tintColor,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
-                    }
 
-                    Text(
-                        text = txn.formattedAmount,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = tintColor
-                    )
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = txn.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                StatusPill(
+                                    label = txn.type.name,
+                                    color = tintColor
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "${txn.category} • ${txn.formattedDate}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = txn.formattedAmount,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = tintColor
+                        )
+                    }
                 }
             }
         }

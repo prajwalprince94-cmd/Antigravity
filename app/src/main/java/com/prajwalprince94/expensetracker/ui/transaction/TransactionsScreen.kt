@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
+import com.prajwalprince94.expensetracker.ui.components.EmptyStateView
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
 import com.prajwalprince94.expensetracker.ui.components.bob
@@ -48,6 +50,10 @@ import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.theme.CardShape
+import com.prajwalprince94.expensetracker.ui.theme.ChipShape
+import com.prajwalprince94.expensetracker.ui.theme.InputShape
+import com.prajwalprince94.expensetracker.ui.theme.PillShape
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialColor
 import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 
@@ -118,7 +124,7 @@ fun TransactionsScreen(
                     }
                 }
             },
-            shape = RoundedCornerShape(22.dp),
+            shape = InputShape,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -145,7 +151,7 @@ fun TransactionsScreen(
             items(filterOptions) { filter ->
                 val isSelected = selectedFilter == filter
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = PillShape,
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
                     modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
                         selectedFilter = filter
@@ -168,40 +174,25 @@ fun TransactionsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp),
+                    .padding(top = 40.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.bob(amplitude = 6.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "No matching transactions",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Try adjusting your search or filter",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                EmptyStateView(
+                    icon = Icons.Default.SearchOff,
+                    title = if (searchQuery.isNotBlank()) "No Matching Results" else "No Transactions Found",
+                    subtitle = if (searchQuery.isNotBlank()) {
+                        "We couldn't find any transactions matching \"$searchQuery\". Try adjusting your query or filters."
+                    } else {
+                        "You don't have any $selectedFilter transactions recorded yet."
+                    },
+                    actionLabel = if (searchQuery.isNotBlank() || selectedFilter != "All") "Reset Filters" else null,
+                    onAction = if (searchQuery.isNotBlank() || selectedFilter != "All") {
+                        {
+                            searchQuery = ""
+                            selectedFilter = "All"
+                        }
+                    } else null
+                )
             }
         } else {
             LazyColumn(

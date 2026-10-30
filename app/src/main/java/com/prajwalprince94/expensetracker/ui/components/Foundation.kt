@@ -176,3 +176,88 @@ fun Modifier.glow(color: Color, radius: Dp = 50.dp, alpha: Float = 0.35f): Modif
             radius = radius.toPx()
         )
     }
+
+class AppHaptics(private val haptic: androidx.compose.ui.hapticfeedback.HapticFeedback) {
+    fun light() = haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+    fun selection() = haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+    fun confirm() = haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+}
+
+@Composable
+fun rememberAppHaptics(): AppHaptics {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    return androidx.compose.runtime.remember(haptic) { AppHaptics(haptic) }
+}
+
+/**
+ * Appllama benchmark composed EmptyStateView with native iconography,
+ * clear explanation, and primary call-to-action button.
+ */
+@Composable
+fun EmptyStateView(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.material3.Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(36.dp)
+            )
+        }
+
+        androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        if (actionLabel != null && onAction != null) {
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(20.dp))
+            androidx.compose.material3.Surface(
+                modifier = Modifier.bouncyClickable(scaleDown = 0.94f, onClick = onAction),
+                shape = com.prajwalprince94.expensetracker.ui.theme.ButtonShape,
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                Text(
+                    text = actionLabel,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
+                )
+            }
+        }
+    }
+}

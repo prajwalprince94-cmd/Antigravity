@@ -71,19 +71,29 @@ fun Modifier.entrance(index: Int = 0): Modifier {
 }
 
 /**
- * Tap feedback the expressive way (Stride): the element itself squashes on press
- * and springs back on release. Replaces the ripple.
+ * Tap feedback the expressive way (Appllama / Stride): the element itself squashes subtly on press
+ * and springs back on release with tactile haptic feedback.
  */
 @Composable
 fun Modifier.bouncyClickable(
-    scaleDown: Float = 0.90f,
+    scaleDown: Float = 0.94f,
     enabled: Boolean = true,
+    hapticFeedback: Boolean = true,
     onClick: () -> Unit
 ): Modifier {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val reduceMotion = LocalReduceMotion.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+
+    LaunchedEffect(pressed) {
+        if (pressed && enabled && hapticFeedback) {
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+        }
+    }
+
     val scale by animateFloatAsState(
-        targetValue = if (pressed) scaleDown else 1f,
+        targetValue = if (pressed && enabled && !reduceMotion) scaleDown else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium

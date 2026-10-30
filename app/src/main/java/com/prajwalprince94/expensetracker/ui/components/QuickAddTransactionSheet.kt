@@ -64,8 +64,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
+import com.prajwalprince94.expensetracker.ui.theme.ChipShape
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseRed
 import com.prajwalprince94.expensetracker.ui.theme.IncomeGreen
+import com.prajwalprince94.expensetracker.ui.theme.InputShape
+import com.prajwalprince94.expensetracker.ui.theme.PillShape
+import com.prajwalprince94.expensetracker.ui.theme.SheetShape
 import com.prajwalprince94.expensetracker.ui.theme.TransferBlue
 import java.util.UUID
 
@@ -77,6 +82,7 @@ fun QuickAddTransactionSheet(
     onDismiss: () -> Unit,
     onSaveTransaction: (TransactionItem) -> Unit
 ) {
+    val haptics = rememberAppHaptics()
     var selectedType by remember { mutableStateOf(initialType) }
     var rawAmountInput by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(if (initialType == TransactionType.INCOME) "Salary" else "Food & Dining") }
@@ -130,7 +136,7 @@ fun QuickAddTransactionSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        shape = SheetShape,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -142,7 +148,7 @@ fun QuickAddTransactionSheet(
         ) {
             // Three-way Type Selector Segmented Pill
             Surface(
-                shape = RoundedCornerShape(24.dp),
+                shape = PillShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
@@ -152,6 +158,7 @@ fun QuickAddTransactionSheet(
                         isSelected = selectedType == TransactionType.EXPENSE,
                         selectedColor = ExpenseRed,
                         onClick = {
+                            haptics.selection()
                             selectedType = TransactionType.EXPENSE
                             selectedCategory = "Food & Dining"
                         }
@@ -161,6 +168,7 @@ fun QuickAddTransactionSheet(
                         isSelected = selectedType == TransactionType.INCOME,
                         selectedColor = IncomeGreen,
                         onClick = {
+                            haptics.selection()
                             selectedType = TransactionType.INCOME
                             selectedCategory = "Salary"
                         }
@@ -287,7 +295,7 @@ fun QuickAddTransactionSheet(
                 onValueChange = { noteInput = it },
                 placeholder = { Text("Add remark or note (optional)") },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = InputShape,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -330,6 +338,7 @@ fun QuickAddTransactionSheet(
                         enabled = parsedAmountPaise > 0,
                         onClick = {
                             if (parsedAmountPaise > 0) {
+                                haptics.confirm()
                                 val iconName = when (selectedCategory) {
                                     "Food & Dining" -> "Fastfood"
                                     "Groceries" -> "ShoppingCart"
@@ -356,7 +365,7 @@ fun QuickAddTransactionSheet(
                             }
                         }
                     ),
-                shape = RoundedCornerShape(20.dp),
+                shape = ButtonShape,
                 color = if (parsedAmountPaise > 0) activeColor else MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
                 Row(
@@ -393,7 +402,7 @@ private fun TypePillItem(
     onClick: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = PillShape,
         color = if (isSelected) selectedColor else Color.Transparent,
         modifier = Modifier.bouncyClickable(scaleDown = 0.92f, onClick = onClick)
     ) {
@@ -419,7 +428,7 @@ private fun BouncyChip(
     val contentColor = if (isSelected) activeColor else MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = ChipShape,
         color = containerColor,
         modifier = Modifier
             .bouncyClickable(scaleDown = 0.9f, onClick = onClick)
@@ -473,7 +482,7 @@ private fun NumericKeypad(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp)
-                            .clip(RoundedCornerShape(18.dp))
+                            .clip(ButtonShape)
                             .bouncyClickable(
                                 scaleDown = 0.88f,
                                 onClick = {
@@ -483,7 +492,7 @@ private fun NumericKeypad(
                                     }
                                 }
                             ),
-                        shape = RoundedCornerShape(18.dp),
+                        shape = ButtonShape,
                         color = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
                         Box(contentAlignment = Alignment.Center) {
