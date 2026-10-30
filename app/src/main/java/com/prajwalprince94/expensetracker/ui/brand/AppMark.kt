@@ -149,8 +149,7 @@ fun AppMark(
                 0.3f to VyxelBrand.TealBright,
                 0.6f to VyxelBrand.Amber,
                 0.85f to VyxelBrand.Violet,
-                1.0f to VyxelBrand.VioletBright,
-                center = c
+                1.0f to VyxelBrand.VioletBright
             ),
             style = Stroke(
                 width = 3.5.dp.toPx() * progress,
@@ -185,8 +184,7 @@ fun AppMark(
                 brush = Brush.sweepGradient(
                     0.0f to VyxelBrand.TealBright,
                     0.5f to VyxelBrand.VioletBright,
-                    1.0f to VyxelBrand.AmberBright,
-                    center = c
+                    1.0f to VyxelBrand.AmberBright
                 ),
                 startAngle = 30f,
                 sweepAngle = 280f * progress,
@@ -311,14 +309,6 @@ fun AppWordmark(
     modifier: Modifier = Modifier,
     subtitle: String = "VYXEL EDITION • OFFLINE-FIRST VAULT"
 ) {
-    val gradient = Brush.horizontalGradient(
-        listOf(
-            VyxelBrand.WhiteGlow,
-            VyxelBrand.TealBright,
-            VyxelBrand.VioletBright
-        )
-    )
-
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -334,10 +324,9 @@ fun AppWordmark(
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Black,
                         letterSpacing = 2.4.sp,
-                        fontFamily = FontFamily.SansSerif,
-                        brush = if (isAccent) gradient else null
+                        fontFamily = FontFamily.SansSerif
                     ),
-                    color = if (isAccent) Color.Unspecified else VyxelBrand.WhiteGlow.copy(alpha = 0.94f),
+                    color = if (isAccent) VyxelBrand.TealBright else VyxelBrand.WhiteGlow.copy(alpha = 0.94f),
                     modifier = Modifier.padding(horizontal = 1.dp)
                 )
             }

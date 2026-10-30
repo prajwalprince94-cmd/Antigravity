@@ -176,13 +176,11 @@ fun BootScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
-                Brush.radialGradient(
+                Brush.verticalGradient(
                     colors = listOf(
                         VyxelBrand.ObsidianCard,
                         VyxelBrand.Obsidian
-                    ),
-                    center = Offset.Unspecified,
-                    radius = 1200f
+                    )
                 )
             )
             .clickable(
