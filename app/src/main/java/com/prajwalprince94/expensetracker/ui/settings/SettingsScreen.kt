@@ -116,6 +116,7 @@ fun SettingsScreen(
     onOpenPdfExport: () -> Unit = {},
     onOpenCurrencyConverter: () -> Unit = {},
     onOpenSupabaseSync: () -> Unit = {},
+    onReplayBootSequence: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -323,6 +324,13 @@ fun SettingsScreen(
                         onUpdatePreferences(preferences.copy(reduceMotion = it))
                         onShowMessage(if (it) "Motion reduced" else "Full animations enabled")
                     }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                SettingActionRow(
+                    icon = Icons.Default.RestartAlt,
+                    title = "Replay Vyxel Boot Sequence",
+                    subtitle = "Preview vector AppMark with harmonic Lissajous glow & crossfade",
+                    onClick = onReplayBootSequence
                 )
             }
         }

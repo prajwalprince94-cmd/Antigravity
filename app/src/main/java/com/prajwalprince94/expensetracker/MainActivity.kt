@@ -54,6 +54,7 @@ import com.prajwalprince94.expensetracker.navigation.Screen
 import com.prajwalprince94.expensetracker.ui.accounts.AccountsAndCategoriesScreen
 import com.prajwalprince94.expensetracker.ui.analytics.AnalyticsScreen
 import com.prajwalprince94.expensetracker.ui.budgets.BudgetsScreen
+import com.prajwalprince94.expensetracker.ui.boot.BootScreen
 import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
 import com.prajwalprince94.expensetracker.ui.components.LocalReduceMotion
@@ -153,11 +154,14 @@ class MainActivity : FragmentActivity() {
                 CompositionLocalProvider(LocalReduceMotion provides preferences.reduceMotion) {
                     Crossfade(
                         targetState = Triple(hasBooted, isAppLocked, preferences.appLockEnabled && preferences.appLockPinHash.isNotBlank()),
-                        animationSpec = tween(350),
+                        animationSpec = tween(
+                            durationMillis = 650,
+                            easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0f, 0f, 1f)
+                        ),
                         label = "appBootCrossfade"
                     ) { (booted, locked, hasPinLock) ->
                         if (!booted) {
-                            BootSequence(
+                            BootScreen(
                                 isDataLoaded = isLoaded,
                                 onBootComplete = { hasBooted = true }
                             )
@@ -290,6 +294,7 @@ class MainActivity : FragmentActivity() {
                                         repository.clearTransactions()
                                     }
                                 },
+                                onReplayBootSequence = { hasBooted = false },
                                 incomingAction = incomingAction,
                                 onClearIncomingAction = { incomingAction = null }
                             )
@@ -340,6 +345,7 @@ fun MainApp(
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
+    onReplayBootSequence: () -> Unit = {},
     incomingAction: String? = null,
     onClearIncomingAction: () -> Unit = {}
 ) {
@@ -572,6 +578,7 @@ fun MainApp(
                         onOpenSupabaseSync = {
                             showSupabaseSyncSheet = true
                         },
+                        onReplayBootSequence = onReplayBootSequence,
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
                         onClearTransactions = onClearTransactions,

@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.6.0-vyxel-boot.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.5.0-supabase-sync.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.4.0-multi-currency.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.3.0-pdf-tax-statement.apk
@@ -63,24 +64,26 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v3.5.0"
-          name: "Expense Tracker v3.5.0 (Supabase Real-Time Cloud Sync & Offline Conflict Engine)"
+          tag_name: "v3.6.0"
+          name: "Expense Tracker v3.6.0 (Vyxel Boot Sequence, AppMark & Lissajous Glow)"
           body: |
-            ### 📱 Expense Tracker v3.5.0 (Supabase Real-Time Cloud Sync & Offline Conflict Engine)
-            - **Supabase Cloud Synchronization Engine (`SupabaseSyncEngine`):**
-              - Native Android HTTP PostgREST integration communicating directly with Supabase tables (`/rest/v1/transactions`).
-              - **100% Offline-First Core:** Operates with zero network latency on device; changes are queued and synced automatically when connected.
-              - **Developer Demo Sandbox Mode:** Pre-loaded simulation engine allowing instant testing of upload, download, and merge workflows without requiring an active Supabase project.
-              - **Enterprise Conflict Resolution Suite (`ConflictResolutionStrategy`):**
-                - *Latest Timestamp (LWW)*: Automatically keeps the most recent edit across devices.
-                - *Cloud Server Wins*: Resolves discrepancies by prioritizing cloud records.
-                - *Local Device Wins*: Resolves discrepancies by prioritizing device state.
-              - **Connection Health Checker:** Live ping test verifying Project URL and Anon API Key validity.
-              - **Live Activity & Audit Log:** Real-time log tracking records pushed, pulled, conflicts handled, and timestamp history.
-            - **Interactive Cloud Sync Sheet (`SupabaseSyncSheet`):**
-              - Hero sync status card with online/offline/syncing status pills.
-              - 1-tap "Sync Now" action with animated progress indicator.
-              - Supabase URL & Anon API Key credential configuration fields.
+            ### 📱 Expense Tracker v3.6.0 (Vyxel Boot Sequence, AppMark & Lissajous Glow)
+            - **Mathematical Lissajous Glow Engine (`LissajousGlow`):**
+              - High-performance parametric harmonic oscillators ($x = A \sin(3t + \delta), y = B \sin(2t)$) simulating organic 3D plasma ribbons and ambient chromatic blooms.
+              - Multi-layer radial blooms with zero GC allocations on draw loop, cycling through Electric Violet, Cyber Teal, and Radiant Amber.
+              - Trailing phosphor particle sweeps with smooth alpha decay.
+            - **Vector AppMark & Brand Crest (`AppMark`, `AppWordmark`):**
+              - Precision Compose vector geometry featuring outer hex-shield vault contour, dual infinity light arcs, and stylized rupee currency core.
+              - Orbiting photon light rider traveling along perimeter path.
+              - Typographic wordmark with wide tracking and gradient glyph brush.
+            - **Cinematic Boot Telemetry Sequence (`BootScreen`):**
+              - Staged diagnostics sequence (Kernel -> Vault -> Supabase -> FX Engines -> Armed).
+              - Shimmering gradient progress bar and pulsating beacon indicator.
+              - 1-tap skip gesture support for power users.
+              - Seamless crossfade transition into security lock screen or main app.
+            - **In-App Replay:**
+              - Trigger and preview the boot sequence anytime from Settings > Display & Surfaces > Replay Vyxel Boot Sequence.
+            - **Supabase Real-Time Cloud Sync & Offline Conflict Engine (v3.5.0)**
             - **Multi-Currency Support & Live FX Conversion Engine (v3.4.0)**
             - **Advanced PDF Tax Statement & Financial Report Generator (v3.3.0)**
             - **Smart Budget Forecasting & AI Insights (v3.2.0)**
@@ -89,15 +92,13 @@ jobs:
             - **Smart Receipt OCR & Document Scanner (v2.9.0)**
             - **Split Expense & Group Bill Splitting Suite (v2.8.0)**
             - **Financial Health & Analytics Dashboard (v2.7.0)**
-            - **Recurring Subscriptions & Scheduled Bills (v2.6.0)**
-            - **Biometric & PIN Security Suite (v2.5.0)**
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v3.5.0-supabase-sync.apk`** below under Assets.
+            Download **`ExpenseTracker-v3.6.0-vyxel-boot.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/debug/ExpenseTracker-v3.5.0-supabase-sync.apk
+            app/build/outputs/apk/debug/ExpenseTracker-v3.6.0-vyxel-boot.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.4.0-multi-currency.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.3.0-pdf-tax-statement.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk
