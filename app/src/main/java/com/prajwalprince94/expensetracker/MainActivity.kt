@@ -46,6 +46,7 @@ import com.prajwalprince94.expensetracker.data.model.CategoryItem
 import com.prajwalprince94.expensetracker.data.model.SplitBillItem
 import com.prajwalprince94.expensetracker.data.model.SplitGroup
 import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
+import com.prajwalprince94.expensetracker.data.sms.SmsExpenseReceiver
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.navigation.Screen

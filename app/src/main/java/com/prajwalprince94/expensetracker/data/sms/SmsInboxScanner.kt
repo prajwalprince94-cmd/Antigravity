@@ -44,10 +44,10 @@ object SmsInboxScanner {
 
         try {
             val projection = arrayOf(
-                Telephony.Sms._ID,
-                Telephony.Sms.ADDRESS,
-                Telephony.Sms.BODY,
-                Telephony.Sms.DATE
+                "_id",
+                "address",
+                "body",
+                "date"
             )
 
             val cursor = context.contentResolver.query(
@@ -55,13 +55,13 @@ object SmsInboxScanner {
                 projection,
                 null,
                 null,
-                "${Telephony.Sms.DATE} DESC"
+                "date DESC"
             )
 
             cursor?.use { c ->
-                val addressIdx = c.getColumnIndex(Telephony.Sms.ADDRESS)
-                val bodyIdx = c.getColumnIndex(Telephony.Sms.BODY)
-                val dateIdx = c.getColumnIndex(Telephony.Sms.DATE)
+                val addressIdx = c.getColumnIndex("address")
+                val bodyIdx = c.getColumnIndex("body")
+                val dateIdx = c.getColumnIndex("date")
 
                 var count = 0
                 while (c.moveToNext() && count < maxCount) {
