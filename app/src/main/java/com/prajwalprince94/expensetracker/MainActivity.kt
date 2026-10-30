@@ -1,7 +1,7 @@
 package com.prajwalprince94.expensetracker
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
@@ -20,6 +20,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,12 +58,13 @@ import com.prajwalprince94.expensetracker.ui.home.HomeScreen
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import com.prajwalprince94.expensetracker.ui.security.SecurityLockScreen
 import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseTrackerTheme
 import com.prajwalprince94.expensetracker.ui.transaction.TransactionsScreen
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ExpenseGraph.ensureInit(this)
@@ -74,18 +80,65 @@ class MainActivity : ComponentActivity() {
             val isLoaded by repository.isLoaded.collectAsState()
 
             var hasBooted by remember { mutableStateOf(false) }
+            var isAppLocked by remember(preferences.appLockEnabled, preferences.appLockPinHash) {
+                mutableStateOf(preferences.appLockEnabled && preferences.appLockPinHash.isNotBlank())
+            }
+            var lastBackgroundTimestamp by remember { mutableStateOf(System.currentTimeMillis()) }
+
+            // Recents Privacy Shield: secure app window in Android Recents switcher
+            LaunchedEffect(preferences.appLockEnabled, preferences.recentsPrivacyBlur) {
+                if (preferences.appLockEnabled && preferences.recentsPrivacyBlur) {
+                    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
+            // Lifecycle monitoring for Auto-Lock timeout on app backgrounding
+            val lifecycleOwner = LocalLifecycleOwner.current
+            DisposableEffect(lifecycleOwner, preferences.appLockEnabled, preferences.appLockPinHash, preferences.autoLockTimeoutSeconds) {
+                val observer = LifecycleEventObserver { _, event ->
+                    when (event) {
+                        Lifecycle.Event.ON_STOP -> {
+                            lastBackgroundTimestamp = System.currentTimeMillis()
+                        }
+                        Lifecycle.Event.ON_START -> {
+                            if (preferences.appLockEnabled && preferences.appLockPinHash.isNotBlank()) {
+                                val elapsedSec = (System.currentTimeMillis() - lastBackgroundTimestamp) / 1000L
+                                if (elapsedSec >= preferences.autoLockTimeoutSeconds) {
+                                    isAppLocked = true
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
 
             ExpenseTrackerTheme(preferences = preferences) {
                 CompositionLocalProvider(LocalReduceMotion provides preferences.reduceMotion) {
                     Crossfade(
-                        targetState = hasBooted,
-                        animationSpec = tween(400),
+                        targetState = Triple(hasBooted, isAppLocked, preferences.appLockEnabled && preferences.appLockPinHash.isNotBlank()),
+                        animationSpec = tween(350),
                         label = "appBootCrossfade"
-                    ) { booted ->
+                    ) { (booted, locked, hasPinLock) ->
                         if (!booted) {
                             BootSequence(
                                 isDataLoaded = isLoaded,
                                 onBootComplete = { hasBooted = true }
+                            )
+                        } else if (locked && hasPinLock) {
+                            SecurityLockScreen(
+                                storedPinHash = preferences.appLockPinHash,
+                                isBiometricEnabled = preferences.biometricEnabled,
+                                onUnlockSuccess = {
+                                    isAppLocked = false
+                                    lastBackgroundTimestamp = System.currentTimeMillis()
+                                }
                             )
                         } else {
                             MainApp(

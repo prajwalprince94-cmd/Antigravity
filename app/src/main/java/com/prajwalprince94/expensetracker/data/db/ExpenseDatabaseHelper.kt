@@ -469,6 +469,11 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         var palette = AppPalette.EMERALD
         var ambientAurora = true
         var reduceMotion = false
+        var appLockEnabled = false
+        var biometricEnabled = true
+        var appLockPinHash = ""
+        var autoLockTimeoutSeconds = 0
+        var recentsPrivacyBlur = true
 
         val cursor = db.query(TABLE_PREFERENCES, null, null, null, null, null, null)
         cursor.use {
@@ -483,6 +488,11 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                     "palette" -> runCatching { palette = AppPalette.valueOf(value) }
                     "ambientAurora" -> ambientAurora = value.toBoolean()
                     "reduceMotion" -> reduceMotion = value.toBoolean()
+                    "appLockEnabled" -> appLockEnabled = value.toBoolean()
+                    "biometricEnabled" -> biometricEnabled = value.toBoolean()
+                    "appLockPinHash" -> appLockPinHash = value
+                    "autoLockTimeoutSeconds" -> runCatching { autoLockTimeoutSeconds = value.toInt() }
+                    "recentsPrivacyBlur" -> recentsPrivacyBlur = value.toBoolean()
                 }
             }
         }
@@ -493,7 +503,12 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             colorStyle = colorStyle,
             palette = palette,
             ambientAurora = ambientAurora,
-            reduceMotion = reduceMotion
+            reduceMotion = reduceMotion,
+            appLockEnabled = appLockEnabled,
+            biometricEnabled = biometricEnabled,
+            appLockPinHash = appLockPinHash,
+            autoLockTimeoutSeconds = autoLockTimeoutSeconds,
+            recentsPrivacyBlur = recentsPrivacyBlur
         )
     }
 
@@ -506,7 +521,12 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             "colorStyle" to prefs.colorStyle.name,
             "palette" to prefs.palette.name,
             "ambientAurora" to prefs.ambientAurora.toString(),
-            "reduceMotion" to prefs.reduceMotion.toString()
+            "reduceMotion" to prefs.reduceMotion.toString(),
+            "appLockEnabled" to prefs.appLockEnabled.toString(),
+            "biometricEnabled" to prefs.biometricEnabled.toString(),
+            "appLockPinHash" to prefs.appLockPinHash,
+            "autoLockTimeoutSeconds" to prefs.autoLockTimeoutSeconds.toString(),
+            "recentsPrivacyBlur" to prefs.recentsPrivacyBlur.toString()
         )
         db.beginTransaction()
         try {

@@ -27,10 +27,16 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MotionPhotosOff
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.Timer
+import com.prajwalprince94.expensetracker.security.BiometricSecurityManager
+import com.prajwalprince94.expensetracker.ui.security.PinSetupBottomSheet
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -97,7 +103,8 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val haptics = rememberAppHaptics()
-    var isAppLockEnabled by remember { mutableStateOf(false) }
+    var showPinSetupSheet by remember { mutableStateOf(false) }
+    val isBiometricAvailable = remember(context) { BiometricSecurityManager.isBiometricAvailable(context) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfoToDisplay by remember { mutableStateOf<AppUpdateInfo?>(null) }
     val updateSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -309,16 +316,149 @@ fun SettingsScreen(
                     .entrance(4),
                 contentPadding = 12.dp
             ) {
+                // App Lock Master Toggle
                 SettingToggleRow(
-                    icon = Icons.Default.Fingerprint,
-                    title = "Biometric Lock",
-                    subtitle = "Require fingerprint or face unlock on launch",
-                    checked = isAppLockEnabled,
-                    onCheckedChange = {
-                        isAppLockEnabled = it
-                        onShowMessage(if (it) "Biometric Lock enabled" else "Biometric Lock disabled")
+                    icon = Icons.Default.Lock,
+                    title = "App Lock",
+                    subtitle = if (preferences.appLockEnabled) "App requires 4-digit PIN or Biometrics to open" else "Secure your transactions and account records",
+                    checked = preferences.appLockEnabled,
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            if (preferences.appLockPinHash.isBlank()) {
+                                showPinSetupSheet = true
+                            } else {
+                                onUpdatePreferences(preferences.copy(appLockEnabled = true))
+                                onShowMessage("App Lock enabled")
+                            }
+                        } else {
+                            onUpdatePreferences(preferences.copy(appLockEnabled = false))
+                            onShowMessage("App Lock disabled")
+                        }
                     }
                 )
+
+                if (preferences.appLockEnabled) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    // Change PIN Row
+                    SettingActionRow(
+                        icon = Icons.Default.Password,
+                        title = if (preferences.appLockPinHash.isBlank()) "Set 4-Digit PIN" else "Change 4-Digit PIN",
+                        subtitle = if (preferences.appLockPinHash.isBlank()) "PIN required to complete lock setup" else "Update your 4-digit passcode",
+                        onClick = {
+                            haptics.selection()
+                            showPinSetupSheet = true
+                        }
+                    )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    // Biometrics Toggle
+                    SettingToggleRow(
+                        icon = Icons.Default.Fingerprint,
+                        title = "Biometric Unlock",
+                        subtitle = if (isBiometricAvailable) "Use Fingerprint or Face recognition" else "Biometrics not enrolled or supported on this device",
+                        checked = preferences.biometricEnabled && isBiometricAvailable,
+                        onCheckedChange = { enabled ->
+                            if (!isBiometricAvailable) {
+                                onShowMessage("Biometrics unavailable on device")
+                            } else {
+                                onUpdatePreferences(preferences.copy(biometricEnabled = enabled))
+                                onShowMessage(if (enabled) "Biometric Unlock enabled" else "Biometric Unlock disabled")
+                            }
+                        }
+                    )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    // Auto-Lock Timeout Row
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Timer,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Auto-Lock Delay",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Lock when app is minimized or backgrounded",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val timeoutOptions = listOf(
+                                0 to "Immediately",
+                                60 to "1 Minute",
+                                300 to "5 Minutes"
+                            )
+                            timeoutOptions.forEach { (seconds, label) ->
+                                val selected = preferences.autoLockTimeoutSeconds == seconds
+                                Surface(
+                                    shape = ChipShape,
+                                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .bouncyClickable(scaleDown = 0.94f) {
+                                            haptics.selection()
+                                            onUpdatePreferences(preferences.copy(autoLockTimeoutSeconds = seconds))
+                                            onShowMessage("Lock delay: $label")
+                                        }
+                                ) {
+                                    Box(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    // Recents Privacy Shield
+                    SettingToggleRow(
+                        icon = Icons.Default.Security,
+                        title = "Recents Privacy Shield",
+                        subtitle = "Prevents previews in Android Recent Apps switcher",
+                        checked = preferences.recentsPrivacyBlur,
+                        onCheckedChange = { blur ->
+                            onUpdatePreferences(preferences.copy(recentsPrivacyBlur = blur))
+                            onShowMessage(if (blur) "Recents Privacy Shield enabled" else "Recents Privacy Shield disabled")
+                        }
+                    )
+                }
             }
         }
 
@@ -538,6 +678,22 @@ fun SettingsScreen(
             sheetState = updateSheetState,
             onDismiss = { updateInfoToDisplay = null },
             onShowMessage = onShowMessage
+        )
+    }
+
+    if (showPinSetupSheet) {
+        PinSetupBottomSheet(
+            onDismiss = { showPinSetupSheet = false },
+            onPinConfigured = { hash ->
+                onUpdatePreferences(
+                    preferences.copy(
+                        appLockPinHash = hash,
+                        appLockEnabled = true
+                    )
+                )
+                showPinSetupSheet = false
+                onShowMessage("4-Digit PIN configured successfully")
+            }
         )
     }
 }

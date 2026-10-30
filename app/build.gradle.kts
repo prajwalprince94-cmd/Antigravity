@@ -12,8 +12,8 @@ android {
         applicationId = "com.prajwalprince94.expensetracker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "2.4.0"
+        versionCode = 7
+        versionName = "2.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,6 +44,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.biometric:biometric:1.1.0")
 
     // Compose BOM (Bill of Materials) ensures compatible Compose library versions
     val composeBom = platform("androidx.compose:compose-bom:2024.10.00")

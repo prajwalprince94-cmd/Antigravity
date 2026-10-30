@@ -25,5 +25,10 @@ data class AppPreferences(
     val colorStyle: ColorStyle = ColorStyle.EXPRESSIVE,
     val palette: AppPalette = AppPalette.EMERALD,
     val ambientAurora: Boolean = true,
-    val reduceMotion: Boolean = false
+    val reduceMotion: Boolean = false,
+    val appLockEnabled: Boolean = false,
+    val biometricEnabled: Boolean = true,
+    val appLockPinHash: String = "",
+    val autoLockTimeoutSeconds: Int = 0, // 0: Immediately, 60: 1 min, 300: 5 min
+    val recentsPrivacyBlur: Boolean = true
 )

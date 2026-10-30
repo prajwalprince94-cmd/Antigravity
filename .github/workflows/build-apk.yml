@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.5.0-biometric-pin-lock.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.4.0-accounts-categories.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.3.0-csv-export.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.2.0-appllama-masterpiece.apk
@@ -52,30 +53,31 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.4.0"
-          name: "Expense Tracker v2.4.0 (Accounts & Custom Categories Management)"
+          tag_name: "v2.5.0"
+          name: "Expense Tracker v2.5.0 (Biometric & 4-Digit PIN App Lock Suite)"
           body: |
-            ### 💳 Expense Tracker v2.4.0 (Accounts & Custom Categories Masterpiece)
-            - **Multi-Account Vault & Live Balance Architecture:**
-              - Complete management (Create, Edit, Delete) for multi-account financial containers (`UPI`, `BANK`, `CASH`, `CARD`, `SAVINGS`).
-              - Real-time mathematically verified balance calculation combining opening balance with atomic credits and debits from recorded transactions.
-              - Full SQLite ACID persistence with zero-data-loss database schema migration (`accounts` table).
-            - **Custom Category Creator & Icon Registry:**
-              - User-created custom category tags for both `Expense` and `Income`.
-              - Centralized `IconRegistry` with 21+ curated finance, lifestyle, travel, and utility icons and 10 vibrant color swatches.
-              - System default categories protection (default categories are locked to guarantee core budget tracking stability).
-            - **Seamless App-Wide Integration:**
-              - **Quick Add Transaction Sheet:** Category and account selector chips dynamically reflect user accounts and newly created tags.
-              - **Home Dashboard Carousel:** Real-time account balances, color badges, and one-tap "Manage" pill leading directly to Accounts & Categories.
-              - **Settings Configuration:** Dedicated "Accounts & Tagging" section for direct access and management.
-            - **Stride & Appllama Design Polish:**
-              - Squircle continuous shape scale, responsive segmented pill tab switcher, fluid bottom sheets, tactile haptic feedback, and pure OLED dark mode contrast.
+            ### 🔐 Expense Tracker v2.5.0 (Biometric & PIN App Lock Suite)
+            - **Biometric Security & System Authentication:**
+              - Native `androidx.biometric` integration for hardware fingerprint and face unlock.
+              - Auto-triggers system biometric prompt upon application launch or resuming from background.
+            - **4-Digit Fallback PIN Engine:**
+              - Salted SHA-256 cryptographic PIN verification.
+              - 2-step setup and PIN modification bottom sheet with confirmation check.
+              - Responsive custom 12-key tactile keypad (0-9, Biometric shortcut, Backspace).
+              - Spring oscillation error shake animation + tactile haptic feedback on invalid attempts.
+            - **Configurable Auto-Lock Delays:**
+              - Flexible delay options: `Immediately`, `After 1 Minute`, or `After 5 Minutes` when backgrounded.
+            - **Android Recents Privacy Shield:**
+              - Toggles `WindowManager.LayoutParams.FLAG_SECURE` to block screenshots and hide preview cards from the Android Recent Apps switcher.
+            - **Stride & Appllama Benchmark UI/UX:**
+              - OLED high-contrast dark mode, squircle iconography, continuous springs, and zero horizontal scroll jitter.
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.4.0-accounts-categories.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.5.0-biometric-pin-lock.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v2.5.0-biometric-pin-lock.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.4.0-accounts-categories.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.3.0-csv-export.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.2.0-appllama-masterpiece.apk
