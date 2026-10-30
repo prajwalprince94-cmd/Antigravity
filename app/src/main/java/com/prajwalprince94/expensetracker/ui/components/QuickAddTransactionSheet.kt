@@ -1,8 +1,11 @@
 package com.prajwalprince94.expensetracker.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import com.prajwalprince94.expensetracker.data.currency.CurrencyEngine
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -90,6 +93,9 @@ fun QuickAddTransactionSheet(
     var selectedType by remember { mutableStateOf(initialType) }
     var rawAmountInput by remember { mutableStateOf("") }
     var noteInput by remember { mutableStateOf("") }
+    var selectedCurrencyCode by remember { mutableStateOf("INR") }
+    val selectedCurrency = remember(selectedCurrencyCode) { CurrencyEngine.getCurrency(selectedCurrencyCode) }
+    var showCurrencyRow by remember { mutableStateOf(false) }
 
     val effectiveExpenseCategories = remember(categories) {
         val exp = categories.filter { it.type == TransactionType.EXPENSE }
@@ -233,11 +239,78 @@ fun QuickAddTransactionSheet(
                     modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }} Amount",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }} Amount",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // Currency Selector Chip
+                        Surface(
+                            shape = ChipShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.bouncyClickable {
+                                haptics.selection()
+                                showCurrencyRow = !showCurrencyRow
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${selectedCurrency.flagEmoji} ${selectedCurrency.code}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (showCurrencyRow) "▲" else "▼",
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+
+                    // Expandable Currency selector chips row
+                    AnimatedVisibility(visible = showCurrencyRow) {
+                        Column {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(CurrencyEngine.SUPPORTED_CURRENCIES) { curr ->
+                                    val isCurrSelected = curr.code == selectedCurrencyCode
+                                    Surface(
+                                        shape = PillShape,
+                                        color = if (isCurrSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        modifier = Modifier.bouncyClickable {
+                                            haptics.selection()
+                                            selectedCurrencyCode = curr.code
+                                            showCurrencyRow = false
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "${curr.flagEmoji} ${curr.code} (${curr.symbol})",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (isCurrSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isCurrSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
@@ -246,7 +319,7 @@ fun QuickAddTransactionSheet(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "₹",
+                            text = selectedCurrency.symbol,
                             style = MaterialTheme.typography.displayMedium,
                             color = activeColor,
                             fontWeight = FontWeight.Bold
@@ -259,6 +332,31 @@ fun QuickAddTransactionSheet(
                             ),
                             color = activeColor
                         )
+                    }
+
+                    // Live Foreign Currency Conversion to INR Pill
+                    if (selectedCurrencyCode != "INR") {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        val amountDouble = rawAmountInput.toDoubleOrNull() ?: 0.0
+                        val rate = CurrencyEngine.getExchangeRate(selectedCurrencyCode, "INR")
+                        val convertedInrPaise = CurrencyEngine.convertToInrPaise(amountDouble, selectedCurrencyCode)
+                        Surface(
+                            shape = PillShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        ) {
+                            Text(
+                                text = "≈ ₹%,.2f (Rate: 1 %s = ₹%,.2f)".format(
+                                    Locale.US,
+                                    convertedInrPaise / 100.0,
+                                    selectedCurrencyCode,
+                                    rate
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -386,16 +484,27 @@ fun QuickAddTransactionSheet(
                                     else -> if (selectedType == TransactionType.TRANSFER) "SwapHoriz" else "ReceiptLong"
                                 }
 
+                                val amountDouble = rawAmountInput.toDoubleOrNull() ?: 0.0
+                                val finalAmountPaise = if (selectedCurrencyCode == "INR") {
+                                    parsedAmountPaise
+                                } else {
+                                    CurrencyEngine.convertToInrPaise(amountDouble, selectedCurrencyCode)
+                                }
+                                val rate = CurrencyEngine.getExchangeRate(selectedCurrencyCode, "INR")
+
                                 val newTxn = TransactionItem(
                                     id = UUID.randomUUID().toString(),
                                     title = if (noteInput.isNotBlank()) noteInput else selectedCategory,
                                     category = selectedCategory,
                                     account = selectedAccount,
-                                    amountPaise = parsedAmountPaise,
+                                    amountPaise = finalAmountPaise,
                                     type = selectedType,
                                     formattedDate = "Just now",
                                     note = noteInput,
-                                    iconName = iconName
+                                    iconName = iconName,
+                                    originalCurrency = selectedCurrencyCode,
+                                    originalAmountUnits = amountDouble,
+                                    exchangeRate = rate
                                 )
                                 onSaveTransaction(newTxn)
                             }
@@ -416,8 +525,15 @@ fun QuickAddTransactionSheet(
                         tint = if (parsedAmountPaise > 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(8.dp))
+                    val btnText = if (selectedCurrencyCode != "INR" && parsedAmountPaise > 0) {
+                        val amountDouble = rawAmountInput.toDoubleOrNull() ?: 0.0
+                        val inrPaise = CurrencyEngine.convertToInrPaise(amountDouble, selectedCurrencyCode)
+                        "Save (≈ ₹%,.0f)".format(Locale.US, inrPaise / 100.0)
+                    } else {
+                        "Save ${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }}"
+                    }
                     Text(
-                        text = "Save ${selectedType.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                        text = btnText,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (parsedAmountPaise > 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant

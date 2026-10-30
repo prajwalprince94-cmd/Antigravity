@@ -24,7 +24,10 @@ data class TransactionItem(
     val type: TransactionType,
     val formattedDate: String,
     val note: String = "",
-    val iconName: String = "ReceiptLong"
+    val iconName: String = "ReceiptLong",
+    val originalCurrency: String = "INR",
+    val originalAmountUnits: Double = 0.0,
+    val exchangeRate: Double = 1.0
 ) {
     val icon: ImageVector
         get() = when (category) {

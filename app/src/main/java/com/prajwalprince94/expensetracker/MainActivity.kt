@@ -58,6 +58,7 @@ import com.prajwalprince94.expensetracker.ui.components.BootSequence
 import com.prajwalprince94.expensetracker.ui.components.FloatingBottomNavBar
 import com.prajwalprince94.expensetracker.ui.components.LocalReduceMotion
 import com.prajwalprince94.expensetracker.ui.components.QuickAddTransactionSheet
+import com.prajwalprince94.expensetracker.ui.currency.CurrencyConverterSheet
 import com.prajwalprince94.expensetracker.ui.export.PdfExportSheet
 import com.prajwalprince94.expensetracker.ui.components.TransactionDetailSheet
 import com.prajwalprince94.expensetracker.ui.components.UpdateBottomSheet
@@ -368,6 +369,9 @@ fun MainApp(
     var showPdfExportSheet by remember { mutableStateOf(false) }
     val pdfExportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    var showCurrencyConverterSheet by remember { mutableStateOf(false) }
+    val currencyConverterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(incomingAction) {
         when (incomingAction) {
             MainActivity.ACTION_QUICK_ADD -> {
@@ -558,6 +562,9 @@ fun MainApp(
                         onOpenPdfExport = {
                             showPdfExportSheet = true
                         },
+                        onOpenCurrencyConverter = {
+                            showCurrencyConverterSheet = true
+                        },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
                         onClearTransactions = onClearTransactions,
@@ -744,6 +751,19 @@ fun MainApp(
                 transactions = transactions,
                 accounts = accounts,
                 onDismiss = { showPdfExportSheet = false },
+                onShowMessage = { msg ->
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                }
+            )
+        }
+
+        // Multi-Currency & Live FX Converter Bottom Sheet
+        if (showCurrencyConverterSheet) {
+            CurrencyConverterSheet(
+                sheetState = currencyConverterSheetState,
+                preferences = preferences,
+                onUpdatePreferences = onUpdatePreferences,
+                onDismiss = { showCurrencyConverterSheet = false },
                 onShowMessage = { msg ->
                     scope.launch { snackbarHostState.showSnackbar(msg) }
                 }

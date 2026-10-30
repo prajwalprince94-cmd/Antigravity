@@ -30,5 +30,6 @@ data class AppPreferences(
     val biometricEnabled: Boolean = true,
     val appLockPinHash: String = "",
     val autoLockTimeoutSeconds: Int = 0, // 0: Immediately, 60: 1 min, 300: 5 min
-    val recentsPrivacyBlur: Boolean = true
+    val recentsPrivacyBlur: Boolean = true,
+    val baseCurrency: String = "INR"
 )

@@ -38,7 +38,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "expense_tracker.db"
-        const val DATABASE_VERSION = 4
+        const val DATABASE_VERSION = 5
 
         // Transactions table
         const val TABLE_TRANSACTIONS = "transactions"
@@ -52,6 +52,9 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         const val COL_TXN_NOTE = "note"
         const val COL_TXN_ICON = "icon_name"
         const val COL_TXN_TIMESTAMP = "timestamp"
+        const val COL_TXN_ORIGINAL_CURRENCY = "original_currency"
+        const val COL_TXN_ORIGINAL_AMOUNT = "original_amount"
+        const val COL_TXN_EXCHANGE_RATE = "exchange_rate"
 
         // Accounts table
         const val TABLE_ACCOUNTS = "accounts"
@@ -140,7 +143,10 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_TXN_DATE TEXT NOT NULL,
                 $COL_TXN_NOTE TEXT,
                 $COL_TXN_ICON TEXT,
-                $COL_TXN_TIMESTAMP INTEGER NOT NULL
+                $COL_TXN_TIMESTAMP INTEGER NOT NULL,
+                $COL_TXN_ORIGINAL_CURRENCY TEXT DEFAULT 'INR',
+                $COL_TXN_ORIGINAL_AMOUNT REAL DEFAULT 0.0,
+                $COL_TXN_EXCHANGE_RATE REAL DEFAULT 1.0
             )
             """.trimIndent()
         )
@@ -179,6 +185,9 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_TXN_NOTE, txn.note)
                 put(COL_TXN_ICON, txn.iconName)
                 put(COL_TXN_TIMESTAMP, System.currentTimeMillis() - (index * 86400000L))
+                put(COL_TXN_ORIGINAL_CURRENCY, txn.originalCurrency)
+                put(COL_TXN_ORIGINAL_AMOUNT, txn.originalAmountUnits)
+                put(COL_TXN_EXCHANGE_RATE, txn.exchangeRate)
             }
             db.insert(TABLE_TRANSACTIONS, null, cv)
         }
@@ -198,6 +207,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         ensureAccountsAndCategories(db)
         ensureSubscriptions(db)
         ensureSplitTables(db)
+        ensureCurrencyColumns(db)
     }
 
     override fun onOpen(db: SQLiteDatabase) {
@@ -205,6 +215,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         ensureAccountsAndCategories(db)
         ensureSubscriptions(db)
         ensureSplitTables(db)
+        ensureCurrencyColumns(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -217,6 +228,21 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 4) {
             ensureSplitTables(db)
         }
+        if (oldVersion < 5) {
+            ensureCurrencyColumns(db)
+        }
+    }
+
+    private fun ensureCurrencyColumns(db: SQLiteDatabase) {
+        try {
+            db.execSQL("ALTER TABLE $TABLE_TRANSACTIONS ADD COLUMN $COL_TXN_ORIGINAL_CURRENCY TEXT DEFAULT 'INR'")
+        } catch (_: Exception) {}
+        try {
+            db.execSQL("ALTER TABLE $TABLE_TRANSACTIONS ADD COLUMN $COL_TXN_ORIGINAL_AMOUNT REAL DEFAULT 0.0")
+        } catch (_: Exception) {}
+        try {
+            db.execSQL("ALTER TABLE $TABLE_TRANSACTIONS ADD COLUMN $COL_TXN_EXCHANGE_RATE REAL DEFAULT 1.0")
+        } catch (_: Exception) {}
     }
 
     /**
@@ -572,6 +598,15 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 val icon = it.getString(it.getColumnIndexOrThrow(COL_TXN_ICON)) ?: "ReceiptLong"
                 val type = runCatching { TransactionType.valueOf(typeStr) }.getOrDefault(TransactionType.EXPENSE)
 
+                val origCurrIdx = it.getColumnIndex(COL_TXN_ORIGINAL_CURRENCY)
+                val originalCurrency = if (origCurrIdx != -1) it.getString(origCurrIdx) ?: "INR" else "INR"
+
+                val origAmtIdx = it.getColumnIndex(COL_TXN_ORIGINAL_AMOUNT)
+                val originalAmount = if (origAmtIdx != -1) it.getDouble(origAmtIdx) else 0.0
+
+                val exRateIdx = it.getColumnIndex(COL_TXN_EXCHANGE_RATE)
+                val exchangeRate = if (exRateIdx != -1) it.getDouble(exRateIdx) else 1.0
+
                 list.add(
                     TransactionItem(
                         id = id,
@@ -582,7 +617,10 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                         type = type,
                         formattedDate = date,
                         note = note,
-                        iconName = icon
+                        iconName = icon,
+                        originalCurrency = originalCurrency,
+                        originalAmountUnits = originalAmount,
+                        exchangeRate = exchangeRate
                     )
                 )
             }
@@ -603,6 +641,9 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_TXN_NOTE, txn.note)
             put(COL_TXN_ICON, txn.iconName)
             put(COL_TXN_TIMESTAMP, System.currentTimeMillis())
+            put(COL_TXN_ORIGINAL_CURRENCY, txn.originalCurrency)
+            put(COL_TXN_ORIGINAL_AMOUNT, txn.originalAmountUnits)
+            put(COL_TXN_EXCHANGE_RATE, txn.exchangeRate)
         }
         val result = db.insertWithOnConflict(TABLE_TRANSACTIONS, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
         return result != -1L
@@ -679,6 +720,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         var appLockPinHash = ""
         var autoLockTimeoutSeconds = 0
         var recentsPrivacyBlur = true
+        var baseCurrency = "INR"
 
         val cursor = db.query(TABLE_PREFERENCES, null, null, null, null, null, null)
         cursor.use {
@@ -698,6 +740,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                     "appLockPinHash" -> appLockPinHash = value
                     "autoLockTimeoutSeconds" -> runCatching { autoLockTimeoutSeconds = value.toInt() }
                     "recentsPrivacyBlur" -> recentsPrivacyBlur = value.toBoolean()
+                    "baseCurrency" -> baseCurrency = value
                 }
             }
         }
@@ -713,7 +756,8 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             biometricEnabled = biometricEnabled,
             appLockPinHash = appLockPinHash,
             autoLockTimeoutSeconds = autoLockTimeoutSeconds,
-            recentsPrivacyBlur = recentsPrivacyBlur
+            recentsPrivacyBlur = recentsPrivacyBlur,
+            baseCurrency = baseCurrency
         )
     }
 
@@ -731,7 +775,8 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             "biometricEnabled" to prefs.biometricEnabled.toString(),
             "appLockPinHash" to prefs.appLockPinHash,
             "autoLockTimeoutSeconds" to prefs.autoLockTimeoutSeconds.toString(),
-            "recentsPrivacyBlur" to prefs.recentsPrivacyBlur.toString()
+            "recentsPrivacyBlur" to prefs.recentsPrivacyBlur.toString(),
+            "baseCurrency" to prefs.baseCurrency
         )
         db.beginTransaction()
         try {

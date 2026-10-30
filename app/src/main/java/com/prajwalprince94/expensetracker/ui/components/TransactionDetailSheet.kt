@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
+import com.prajwalprince94.expensetracker.data.currency.CurrencyEngine
+import java.util.Locale
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
@@ -135,6 +137,22 @@ fun TransactionDetailSheet(
                         modifier = Modifier.padding(vertical = 10.dp)
                     )
                     DetailRow(label = "Remark / Note", value = transaction.note)
+                }
+                if (transaction.originalCurrency != "INR" && transaction.originalAmountUnits > 0) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        modifier = Modifier.padding(vertical = 10.dp)
+                    )
+                    val curr = CurrencyEngine.getCurrency(transaction.originalCurrency)
+                    DetailRow(
+                        label = "Foreign Currency",
+                        value = "${curr.flagEmoji} ${curr.symbol}%,.2f %s (Rate: ₹%,.2f)".format(
+                            Locale.US,
+                            transaction.originalAmountUnits,
+                            transaction.originalCurrency,
+                            transaction.exchangeRate
+                        )
+                    )
                 }
             }
 

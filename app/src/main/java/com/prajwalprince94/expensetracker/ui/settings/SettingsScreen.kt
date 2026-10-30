@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
@@ -113,6 +114,7 @@ fun SettingsScreen(
     onOpenReceiptScanner: () -> Unit = {},
     onOpenSmsSync: () -> Unit = {},
     onOpenPdfExport: () -> Unit = {},
+    onOpenCurrencyConverter: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -810,12 +812,36 @@ fun SettingsScreen(
             }
         }
 
-        // 7. About App
+        // 7. Multi-Currency & Live FX Conversion Engine
         item {
+            SectionHeader(title = "Multi-Currency & Live FX", modifier = Modifier.entrance(7))
+            Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(7),
+                contentPadding = 12.dp
+            ) {
+                Column {
+                    SettingActionRow(
+                        icon = Icons.Default.CurrencyExchange,
+                        title = "Live FX Converter & Rates",
+                        subtitle = "Track in 11 world currencies (USD, EUR, GBP, AED, JPY, CAD, AUD, SGD) with instant offline conversion",
+                        onClick = {
+                            haptics.confirm()
+                            onOpenCurrencyConverter()
+                        }
+                    )
+                }
+            }
+        }
+
+        // 8. About App
+        item {
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(8),
                 contentPadding = 16.dp
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
