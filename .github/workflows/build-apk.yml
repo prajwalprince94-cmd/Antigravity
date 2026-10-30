@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.0.0-sms-tracker.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.9.0-receipt-ocr.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.8.0-split-bills.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.7.0-analytics-dashboard.apk
@@ -57,36 +58,38 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.9.0"
-          name: "Expense Tracker v2.9.0 (Smart Receipt OCR & Document Scanner)"
+          tag_name: "v3.0.0"
+          name: "Expense Tracker v3.0.0 (Automated SMS Expense Parser & UPI Tracker)"
           body: |
-            ### 🧾 Expense Tracker v2.9.0 (Smart Receipt OCR & Document Scanner)
-            - **Google Play Services ML Kit On-Device Text Recognition:**
-              - Fast, privacy-first on-device text recognition for paper bills, supermarket invoices, and dining slips.
-              - Zero cloud transmission: all receipt imaging and parsing occurs strictly on your device.
-            - **Intelligent Deterministic Receipt Parser (`ReceiptTextParser`):**
-              - Automatically detects merchant brand and store name from raw OCR text.
-              - Extracts grand total in rupees/paise with keyword prioritization (Total, Net Payable, Balance, Amount Due).
-              - Parses transaction dates across ISO, DD/MM/YYYY, and month name formats.
-              - Auto-suggests budget categories (Groceries, Dining, Fuel, Health, Electronics) and payment accounts.
-              - Itemized line-item extraction with individual prices.
-            - **Instant Presets & Digital Invoice Paste:**
-              - Realistic test presets (D-Mart, Starbucks, Shell Fuel, Apollo Pharmacy, Reliance Digital).
-              - Digital receipt paste mode: paste any invoice SMS or digital receipt text to parse in milliseconds.
-            - **1-Tap Expense Auto-Logging:**
-              - Direct entry into the offline expense database with category and account pre-selected.
-            - **Split Expense & Group Bill Splitting Suite (v2.8.0):**
-              - Shared groups, equal/exact/percentage splits, greedy debt simplification, and settlement sync.
-            - **Financial Health & Analytics (v2.7.0):**
-              - 0-100 score, daily burn rate, and interactive donut visualizer.
+            ### 📱 Expense Tracker v3.0.0 (Automated SMS Expense Parser & UPI Tracker)
+            - **Automated Bank & UPI SMS Detection:**
+              - Automatically parses financial debit & credit alerts from major Indian banks (HDFC, SBI, ICICI, Axis, Kotak, Paytm, PNB, Bank of Baroda).
+              - Extracts merchant/beneficiary (Swiggy, Zomato, Starbucks, Amazon, D-Mart, Petrol Pumps), amount in rupees, and account number.
+              - Auto-categorizes into Food & Dining, Groceries, Transportation, Shopping, Entertainment, etc.
+            - **On-Device Privacy-First Inbox Scanner (`SmsInboxScanner`):**
+              - Scans unlogged banking messages directly from your device inbox.
+              - Zero cloud transmission: financial messages are processed strictly in-memory on your device.
+              - Intelligent deduplication: automatically detects transactions already saved in the database to prevent duplicate entries.
+            - **Live Real-Time SMS Listener (`SmsExpenseReceiver`):**
+              - Broadcast receiver captures incoming debit/credit SMS alerts as they arrive.
+              - Fires rich heads-up notifications with 1-tap expense logging.
+            - **1-Tap & Bulk "Log All" Sync:**
+              - Review unlogged transactions and approve them individually or batch-log all new transactions with a single tap.
+            - **Built-in SMS Simulator & Custom Paste:**
+              - Test right away with 6 realistic Indian bank SMS presets or paste any invoice text.
+            - **Smart Receipt OCR & Document Scanner (v2.9.0):**
+              - Camera and gallery on-device text recognition.
+            - **Split Expense & Group Bill Splitting Suite (v2.8.0)**
+            - **Financial Health & Analytics Dashboard (v2.7.0)**
             - **Recurring Subscriptions & Scheduled Bills (v2.6.0)**
             - **Biometric & PIN Security Suite (v2.5.0)**
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.9.0-receipt-ocr.apk`** below under Assets.
+            Download **`ExpenseTracker-v3.0.0-sms-tracker.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v3.0.0-sms-tracker.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.9.0-receipt-ocr.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.8.0-split-bills.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.7.0-analytics-dashboard.apk

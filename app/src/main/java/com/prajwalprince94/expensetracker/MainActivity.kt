@@ -65,6 +65,7 @@ import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.receipt.ReceiptScannerSheet
 import com.prajwalprince94.expensetracker.ui.security.SecurityLockScreen
 import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
+import com.prajwalprince94.expensetracker.ui.sms.SmsSyncSheet
 import com.prajwalprince94.expensetracker.ui.split.SplitGroupsScreen
 import com.prajwalprince94.expensetracker.ui.subscriptions.SubscriptionsScreen
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseTrackerTheme
@@ -161,6 +162,11 @@ class MainActivity : FragmentActivity() {
                                 onAddTransaction = { txn ->
                                     ExpenseGraph.appScope.launch {
                                         repository.addTransaction(txn)
+                                    }
+                                },
+                                onAddBatchTransactions = { txns ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addTransactions(txns)
                                     }
                                 },
                                 onDeleteTransaction = { id ->
@@ -284,6 +290,7 @@ fun MainApp(
     categories: List<CategoryItem>,
     subscriptions: List<SubscriptionItem>,
     onAddTransaction: (TransactionItem) -> Unit,
+    onAddBatchTransactions: (List<TransactionItem>) -> Unit = {},
     onDeleteTransaction: (String) -> Unit,
     onUpdateBudgetLimit: (String, Long) -> Unit,
     onAddAccount: (AccountItem) -> Unit,
@@ -328,6 +335,9 @@ fun MainApp(
     var showReceiptScannerSheet by remember { mutableStateOf(false) }
     val receiptScannerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    var showSmsSyncSheet by remember { mutableStateOf(false) }
+    val smsSyncSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(Unit) {
         try {
             val updateInfo = AppUpdateManager.checkForUpdates(BuildConfig.VERSION_NAME)
@@ -336,6 +346,14 @@ fun MainApp(
                 showUpdateSheet = true
             }
         } catch (_: Exception) {}
+    }
+
+    LaunchedEffect(Unit) {
+        SmsExpenseReceiver.liveDetectedExpenses.collect { liveExpense ->
+            snackbarHostState.showSnackbar(
+                "SMS Alert: Detected ${liveExpense.formattedAmount} at ${liveExpense.merchantOrBeneficiary}"
+            )
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -393,6 +411,9 @@ fun MainApp(
                         onOpenReceiptScanner = {
                             showReceiptScannerSheet = true
                         },
+                        onOpenSmsSync = {
+                            showSmsSyncSheet = true
+                        },
                         onNavigateToTransactions = {
                             navController.navigate(Screen.Transactions.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -432,6 +453,9 @@ fun MainApp(
                         },
                         onOpenReceiptScanner = {
                             showReceiptScannerSheet = true
+                        },
+                        onOpenSmsSync = {
+                            showSmsSyncSheet = true
                         },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
@@ -473,6 +497,9 @@ fun MainApp(
                         },
                         onOpenReceiptScanner = {
                             showReceiptScannerSheet = true
+                        },
+                        onOpenSmsSync = {
+                            showSmsSyncSheet = true
                         },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
@@ -609,6 +636,38 @@ fun MainApp(
                     scope.launch {
                         snackbarHostState.showSnackbar(
                             "Logged receipt: ${newTxn.title} • ${newTxn.formattedAmount}"
+                        )
+                    }
+                },
+                onShowMessage = { msg ->
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                }
+            )
+        }
+
+        // Automated SMS Bank Tracker Bottom Sheet
+        if (showSmsSyncSheet) {
+            SmsSyncSheet(
+                sheetState = smsSyncSheetState,
+                existingTransactions = transactions,
+                accounts = accounts,
+                categories = categories,
+                onDismiss = { showSmsSyncSheet = false },
+                onSaveTransaction = { newTxn ->
+                    onAddTransaction(newTxn)
+                    showSmsSyncSheet = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Logged: ${newTxn.title} • ${newTxn.formattedAmount}"
+                        )
+                    }
+                },
+                onSaveBatchTransactions = { batch ->
+                    onAddBatchTransactions(batch)
+                    showSmsSyncSheet = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Auto-logged ${batch.size} transactions from SMS!"
                         )
                     }
                 },

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +68,7 @@ fun TransactionsScreen(
     transactions: List<TransactionItem>,
     onSelectTransaction: (TransactionItem) -> Unit,
     onOpenReceiptScanner: () -> Unit = {},
+    onOpenSmsSync: () -> Unit = {},
     onShowMessage: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -120,10 +122,39 @@ fun TransactionsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Scan Receipt Button
+                // SMS Tracker Button
                 Surface(
                     shape = ChipShape,
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                    modifier = Modifier.bouncyClickable {
+                        haptics.selection()
+                        onOpenSmsSync()
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Sms,
+                            contentDescription = "SMS Tracker",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "SMS",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                // Scan Receipt Button
+                Surface(
+                    shape = ChipShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     modifier = Modifier.bouncyClickable {
                         haptics.selection()
                         onOpenReceiptScanner()

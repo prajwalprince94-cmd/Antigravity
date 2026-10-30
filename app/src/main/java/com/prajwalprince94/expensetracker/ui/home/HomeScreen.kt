@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SwapHoriz
 import com.prajwalprince94.expensetracker.data.analytics.FinancialHealthAnalyzer
@@ -102,6 +103,7 @@ fun HomeScreen(
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToSplit: () -> Unit = {},
     onOpenReceiptScanner: () -> Unit = {},
+    onOpenSmsSync: () -> Unit = {},
     onLogSubscriptionPayment: (String) -> Unit = {},
     onSelectTransaction: (TransactionItem) -> Unit,
     onShowMessage: (String) -> Unit,
@@ -231,6 +233,9 @@ fun HomeScreen(
                             bills = splitBills,
                             onNavigateToSplit = onNavigateToSplit
                         )
+                        SmsTrackerBanner(
+                            onOpenSmsSync = onOpenSmsSync
+                        )
                         AccountsCarousel(
                             accounts = effectiveAccounts,
                             transactions = transactions,
@@ -282,6 +287,14 @@ fun HomeScreen(
                     groups = splitGroups,
                     bills = splitBills,
                     onNavigateToSplit = onNavigateToSplit,
+                    modifier = Modifier.entrance(2)
+                )
+            }
+
+            // 3.9 Automated SMS Bank Tracker Banner
+            item {
+                SmsTrackerBanner(
+                    onOpenSmsSync = onOpenSmsSync,
                     modifier = Modifier.entrance(2)
                 )
             }
@@ -1120,6 +1133,101 @@ private fun SplitExpenseBanner(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
                         tint = accentColor,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmsTrackerBanner(
+    onOpenSmsSync: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptics = rememberAppHaptics()
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .bouncyClickable(scaleDown = 0.98f) {
+                haptics.selection()
+                onOpenSmsSync()
+            }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Sms,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Auto SMS Bank Tracker",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "v3.0",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Detect bank debits & UPI SMS to auto-log expenses",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Surface(
+                shape = PillShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Sync",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(14.dp)
                     )
                 }

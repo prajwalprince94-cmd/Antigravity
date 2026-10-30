@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Timer
@@ -105,6 +106,7 @@ fun SettingsScreen(
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToSplit: () -> Unit = {},
     onOpenReceiptScanner: () -> Unit = {},
+    onOpenSmsSync: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -659,6 +661,28 @@ fun SettingsScreen(
                     onClick = {
                         haptics.confirm()
                         onOpenReceiptScanner()
+                    }
+                )
+            }
+        }
+
+        // 5.10 Automated Bank SMS Tracker
+        item {
+            SectionHeader(title = "Automated Bank SMS Tracker", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.Sms,
+                    title = "Sync Bank & UPI Notifications (v3.0)",
+                    subtitle = "Automatically detect debit/credit SMS alerts from Indian banks with 1-tap logging",
+                    onClick = {
+                        haptics.confirm()
+                        onOpenSmsSync()
                     }
                 )
             }

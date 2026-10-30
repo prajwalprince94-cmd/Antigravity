@@ -98,6 +98,23 @@ class ExpenseRepository(
         success
     }
 
+    suspend fun addTransactions(txns: List<TransactionItem>): Int = withContext(Dispatchers.IO) {
+        var count = 0
+        for (txn in txns) {
+            if (dbHelper.insertTransaction(txn)) {
+                count++
+            }
+        }
+        if (count > 0) {
+            val updatedTxns = dbHelper.getAllTransactions()
+            dbHelper.recalculateBudgetsSpent(updatedTxns)
+            val updatedBudgets = dbHelper.getAllBudgets()
+            _transactions.value = updatedTxns
+            _budgets.value = updatedBudgets
+        }
+        count
+    }
+
     suspend fun deleteTransaction(id: String): Boolean = withContext(Dispatchers.IO) {
         val success = dbHelper.deleteTransaction(id)
         if (success) {
