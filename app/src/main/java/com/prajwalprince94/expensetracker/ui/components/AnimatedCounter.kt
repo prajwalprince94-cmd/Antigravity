@@ -51,7 +51,7 @@ fun AnimatedRupeeTicker(
     ) { text ->
         Text(
             text = text,
-            style = style,
+            style = style.copy(fontFeatureSettings = "tnum"),
             color = color
         )
     }
@@ -74,6 +74,6 @@ fun AnimatedCounter(
         label = "counter",
         modifier = modifier
     ) { str ->
-        Text(text = str, style = style, color = color)
+        Text(text = str, style = style.copy(fontFeatureSettings = "tnum"), color = color)
     }
 }

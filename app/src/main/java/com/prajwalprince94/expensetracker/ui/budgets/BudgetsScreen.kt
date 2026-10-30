@@ -195,7 +195,7 @@ fun BudgetsScreen(
                         .fillMaxWidth()
                         .height(10.dp)
                         .clip(RoundedCornerShape(5.dp)),
-                    color = if (overallProgress > 0.9f) ExpenseRed else MaterialTheme.colorScheme.primary,
+                    color = if (overallProgress > 0.9f) ExpenseRed else if (overallProgress > 0.75f) Color(0xFFFF9800) else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 )
 

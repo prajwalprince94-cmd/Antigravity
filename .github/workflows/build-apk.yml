@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.1.0-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-Level1.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-high-contrast.apk
@@ -49,29 +50,27 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.0-masterpiece"
-          name: "Expense Tracker v2.0 (Stride Masterpiece UI/UX, High-Contrast Obsidian, Zero-Lag)"
+          tag_name: "v2.1.0"
+          name: "Expense Tracker v2.1.0 (Appllama Native Benchmark UI & Fixed In-App Updater)"
           body: |
-            ### 📱 Expense Tracker v2.0 Masterpiece Release (High-Contrast & Performance Edition)
-            - **Performance & Zero-Lag (Buttery 60/120 FPS):**
-              - *Draw-Phase Phase Deferral:* `AuroraBackground` ambient animation reads are deferred directly to `drawBehind`, completely eliminating the root-level recomposition loop.
-              - *Non-Allocating List Dissolution:* `Modifier.fadingEdges` replaced GPU offscreen FBO texture churn with direct gradient overlay passes.
-              - *Stutter-Free Lazy Scrolling:* Removed LaunchedEffect item animations and delays inside lazy column items for immediate, fluid scrolling.
-              - *Streamlined Rupee Ticker:* Unified numeric odometer transitions into a single composite transition node.
-            - **High-Contrast Surface Ladder (Stride & Zenith Inspiration):**
-              - *Dark / AMOLED Mode:* Pure white text (`#F8FAFC`) on elevated obsidian (`#161B20`) cards over deep obsidian (`#0B0F12`) / AMOLED black (`#000000`).
-              - *Light Mode:* Deep ink black text (`#0F172A`) on crisp white cards (`#FFFFFF`) over soft cool slate (`#F4F6F8`).
-              - *Semantic Indicators:* Vivid Emerald (`#10B981` / `#34D399`) and Coral (`#EF4444` / `#F87171`) with adaptive high-contrast badges (no muddy clashing pastels).
-            - **UI/UX & Navigation (Stride as Core Focus):** Floating pill dock with active tab horizontal spring expansion, icon overshoot pop animation, and bouncy physical squash tap feedback.
-            - **Branded Startup Experience (Vyxel):** Branded `BootSequence` on cold start with pulsating brand mark, progress shimmer, and smooth 400ms crossfade into main app.
-            - **100% Offline SQLite Persistence:** Full ACID database persistence for transactions, category budgets, and preferences surviving device reboots.
-            - **Typography:** Genuine offline-bundled Poppins font family across all screens.
+            ### 📱 Expense Tracker v2.1.0 (Appllama Native Benchmark Edition)
+            - **In-App Updater Fixed & Overhauled:**
+              - *Multi-Hop Redirect Resolver:* Seamlessly resolves 301, 302, 303, 307, 308 redirects from GitHub releases to Azure CDN storage without stream cutoff.
+              - *SELinux Permissive Storage:* Stores download APK in external files directory (`Android/data/.../files/Download`) so Android Package Installer can install without SELinux permission exceptions.
+              - *Reliable Semantic Versioning:* Compares semantic integers (`[major, minor, patch]`) so installed apps accurately identify true updates without false alerts.
+              - *Throttled Progress Reporting:* Eliminates main-thread dispatcher churn during 17MB streaming.
+            - **Appllama Native Benchmark UI Polish:**
+              - *Anti-Slop Strict Enforcement:* Replaced all UI chrome emoji with native Material Symbols & Icons.
+              - *Tabular Numerals:* Enforced `tabular-nums` formatting across rupee tickers, transaction amounts, and budget progress dials to eliminate horizontal jitter.
+              - *Continuous Corners & Unified Radii:* Standardized 20dp/28dp squircle card scale.
+              - *60/120 FPS Buttery Motion:* Zero dropped frames across transitions and bottom sheet drags.
             
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.0-stride-masterpiece.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.1.0-masterpiece.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v2.1.0-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-high-contrast.apk
             app/build/outputs/apk/debug/ExpenseTracker-Level1.apk

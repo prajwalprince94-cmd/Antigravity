@@ -175,7 +175,20 @@ fun TransactionsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.bob(amplitude = 6.dp)
                 ) {
-                    Text("🔍", fontSize = 48.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "No matching transactions",
