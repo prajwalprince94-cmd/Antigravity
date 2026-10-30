@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brightness4
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
@@ -65,6 +66,7 @@ import com.prajwalprince94.expensetracker.BuildConfig
 import com.prajwalprince94.expensetracker.data.export.CsvExporter
 import com.prajwalprince94.expensetracker.data.model.AccountItem
 import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
@@ -94,7 +96,9 @@ fun SettingsScreen(
     transactions: List<TransactionItem> = emptyList(),
     accounts: List<AccountItem> = emptyList(),
     categories: List<CategoryItem> = emptyList(),
+    subscriptions: List<SubscriptionItem> = emptyList(),
     onNavigateToAccounts: () -> Unit = {},
+    onNavigateToSubscriptions: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -561,6 +565,28 @@ fun SettingsScreen(
                     onClick = {
                         haptics.confirm()
                         onNavigateToAccounts()
+                    }
+                )
+            }
+        }
+
+        // 5.6 Recurring Bills & Subscriptions
+        item {
+            SectionHeader(title = "Subscriptions & Commitments", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.CalendarMonth,
+                    title = "Subscriptions & Recurring Bills",
+                    subtitle = "${subscriptions.size} tracked • ${subscriptions.count { it.isActive }} active",
+                    onClick = {
+                        haptics.confirm()
+                        onNavigateToSubscriptions()
                     }
                 )
             }

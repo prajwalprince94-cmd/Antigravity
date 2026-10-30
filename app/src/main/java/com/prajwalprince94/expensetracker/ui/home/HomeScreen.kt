@@ -59,6 +59,7 @@ import com.prajwalprince94.expensetracker.ui.components.isWideScreen
 import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
 import com.prajwalprince94.expensetracker.data.model.AccountItem
+import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.ui.components.IconRegistry
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
@@ -83,9 +84,12 @@ import java.util.Locale
 fun HomeScreen(
     transactions: List<TransactionItem>,
     accounts: List<AccountItem> = emptyList(),
+    subscriptions: List<SubscriptionItem> = emptyList(),
     onOpenQuickAdd: (TransactionType) -> Unit,
     onNavigateToTransactions: () -> Unit,
     onNavigateToAccounts: () -> Unit = {},
+    onNavigateToSubscriptions: () -> Unit = {},
+    onLogSubscriptionPayment: (String) -> Unit = {},
     onSelectTransaction: (TransactionItem) -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -251,6 +255,18 @@ fun HomeScreen(
                     transactions = transactions,
                     modifier = Modifier.entrance(3)
                 )
+            }
+
+            // 5.5 Upcoming Subscriptions & Bills Carousel
+            if (subscriptions.isNotEmpty()) {
+                item {
+                    UpcomingBillsCarousel(
+                        subscriptions = subscriptions,
+                        onNavigateToSubscriptions = onNavigateToSubscriptions,
+                        onLogPayment = onLogSubscriptionPayment,
+                        onShowMessage = onShowMessage
+                    )
+                }
             }
 
             // 6. Accounts & Wallets Carousel
@@ -691,6 +707,151 @@ private fun QuickActionButton(
                 fontSize = 12.sp,
                 maxLines = 1
             )
+        }
+    }
+}
+
+@Composable
+private fun UpcomingBillsCarousel(
+    subscriptions: List<SubscriptionItem>,
+    onNavigateToSubscriptions: () -> Unit,
+    onLogPayment: (String) -> Unit,
+    onShowMessage: (String) -> Unit
+) {
+    val haptics = rememberAppHaptics()
+    val activeSubs = subscriptions.filter { it.isActive }
+    val upcomingSubs = activeSubs.sortedBy { it.nextDueDateMillis }
+
+    Column(modifier = Modifier.entrance(3)) {
+        SectionHeader(
+            title = "Recurring Bills & Subscriptions",
+            trailing = {
+                Surface(
+                    shape = ChipShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.bouncyClickable(scaleDown = 0.9f) {
+                        haptics.selection()
+                        onNavigateToSubscriptions()
+                    }
+                ) {
+                    Text(
+                        text = "Manage (${activeSubs.size})",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(upcomingSubs) { sub ->
+                val subColor = IconRegistry.parseColor(sub.colorHex)
+
+                GlassCard(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .bouncyClickable(scaleDown = 0.94f) {
+                            onNavigateToSubscriptions()
+                        },
+                    contentPadding = 14.dp
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(ChipShape)
+                                    .background(subColor.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = IconRegistry.getIcon(sub.iconKey),
+                                    contentDescription = null,
+                                    tint = subColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = sub.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1
+                                )
+                                Text(
+                                    text = sub.category,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = sub.formattedAmount,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Surface(
+                                shape = PillShape,
+                                color = if (sub.isOverdue) ExpenseRed.copy(alpha = 0.15f)
+                                else if (sub.daysUntilDue <= 3) Color(0xFFF59E0B).copy(alpha = 0.15f)
+                                else MaterialTheme.colorScheme.surfaceContainerHigh
+                            ) {
+                                Text(
+                                    text = if (sub.isOverdue) "Overdue" else if (sub.daysUntilDue == 0) "Today" else "In ${sub.daysUntilDue}d",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (sub.isOverdue) ExpenseRed else if (sub.daysUntilDue <= 3) Color(0xFFF59E0B) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Surface(
+                            shape = PillShape,
+                            color = IncomeGreen.copy(alpha = 0.14f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(30.dp)
+                                .bouncyClickable(scaleDown = 0.94f) {
+                                    haptics.confirm()
+                                    onLogPayment(sub.id)
+                                    onShowMessage("Logged payment for ${sub.name}")
+                                }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "Mark Paid",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = IncomeGreen
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

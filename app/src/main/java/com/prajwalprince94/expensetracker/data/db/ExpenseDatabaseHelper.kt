@@ -5,14 +5,20 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.prajwalprince94.expensetracker.data.model.AccountItem
+import com.prajwalprince94.expensetracker.data.model.BillingCycle
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.ui.model.AppPalette
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.ColorStyle
 import com.prajwalprince94.expensetracker.ui.model.ThemeMode
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 /**
  * Local offline SQLite database for Expense Tracker.
@@ -27,7 +33,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "expense_tracker.db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
 
         // Transactions table
         const val TABLE_TRANSACTIONS = "transactions"
@@ -59,6 +65,23 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         const val COL_CAT_COLOR = "color_hex"
         const val COL_CAT_ICON = "icon_key"
         const val COL_CAT_IS_SYSTEM = "is_system"
+
+        // Subscriptions & Recurring Bills table
+        const val TABLE_SUBSCRIPTIONS = "subscriptions"
+        const val COL_SUB_ID = "id"
+        const val COL_SUB_NAME = "name"
+        const val COL_SUB_AMOUNT_PAISE = "amount_paise"
+        const val COL_SUB_CATEGORY = "category"
+        const val COL_SUB_ACCOUNT = "account"
+        const val COL_SUB_BILLING_CYCLE = "billing_cycle"
+        const val COL_SUB_DUE_DAY = "due_day"
+        const val COL_SUB_START_DATE_MILLIS = "start_date_millis"
+        const val COL_SUB_NEXT_DUE_DATE_MILLIS = "next_due_date_millis"
+        const val COL_SUB_IS_ACTIVE = "is_active"
+        const val COL_SUB_AUTO_LOG = "auto_log"
+        const val COL_SUB_LAST_LOGGED_DATE_MILLIS = "last_logged_date_millis"
+        const val COL_SUB_COLOR = "color_hex"
+        const val COL_SUB_ICON = "icon_key"
 
         // Budgets table
         const val TABLE_BUDGETS = "budgets"
@@ -143,16 +166,21 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
 
         ensureAccountsAndCategories(db)
+        ensureSubscriptions(db)
     }
 
     override fun onOpen(db: SQLiteDatabase) {
         super.onOpen(db)
         ensureAccountsAndCategories(db)
+        ensureSubscriptions(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
             ensureAccountsAndCategories(db)
+        }
+        if (oldVersion < 3) {
+            ensureSubscriptions(db)
         }
     }
 
@@ -221,6 +249,57 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                     put(COL_CAT_IS_SYSTEM, if (cat.isSystem) 1 else 0)
                 }
                 db.insert(TABLE_CATEGORIES, null, cv)
+            }
+        }
+    }
+
+    /**
+     * Creates subscriptions table if not existing, and seeds defaults.
+     */
+    private fun ensureSubscriptions(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_SUBSCRIPTIONS (
+                $COL_SUB_ID TEXT PRIMARY KEY,
+                $COL_SUB_NAME TEXT NOT NULL,
+                $COL_SUB_AMOUNT_PAISE INTEGER NOT NULL,
+                $COL_SUB_CATEGORY TEXT NOT NULL,
+                $COL_SUB_ACCOUNT TEXT NOT NULL,
+                $COL_SUB_BILLING_CYCLE TEXT NOT NULL,
+                $COL_SUB_DUE_DAY INTEGER NOT NULL,
+                $COL_SUB_START_DATE_MILLIS INTEGER NOT NULL,
+                $COL_SUB_NEXT_DUE_DATE_MILLIS INTEGER NOT NULL,
+                $COL_SUB_IS_ACTIVE INTEGER NOT NULL DEFAULT 1,
+                $COL_SUB_AUTO_LOG INTEGER NOT NULL DEFAULT 0,
+                $COL_SUB_LAST_LOGGED_DATE_MILLIS INTEGER,
+                $COL_SUB_COLOR TEXT,
+                $COL_SUB_ICON TEXT
+            )
+            """.trimIndent()
+        )
+
+        val subCursor = db.rawQuery("SELECT COUNT(*) FROM $TABLE_SUBSCRIPTIONS", null)
+        val subCount = if (subCursor.moveToFirst()) subCursor.getInt(0) else 0
+        subCursor.close()
+
+        if (subCount == 0) {
+            SubscriptionItem.defaultList().forEach { sub ->
+                val cv = ContentValues().apply {
+                    put(COL_SUB_ID, sub.id)
+                    put(COL_SUB_NAME, sub.name)
+                    put(COL_SUB_AMOUNT_PAISE, sub.amountPaise)
+                    put(COL_SUB_CATEGORY, sub.category)
+                    put(COL_SUB_ACCOUNT, sub.account)
+                    put(COL_SUB_BILLING_CYCLE, sub.billingCycle.name)
+                    put(COL_SUB_DUE_DAY, sub.dueDay)
+                    put(COL_SUB_START_DATE_MILLIS, sub.startDateMillis)
+                    put(COL_SUB_NEXT_DUE_DATE_MILLIS, sub.nextDueDateMillis)
+                    put(COL_SUB_IS_ACTIVE, if (sub.isActive) 1 else 0)
+                    put(COL_SUB_AUTO_LOG, if (sub.autoLog) 1 else 0)
+                    put(COL_SUB_COLOR, sub.colorHex)
+                    put(COL_SUB_ICON, sub.iconKey)
+                }
+                db.insert(TABLE_SUBSCRIPTIONS, null, cv)
             }
         }
     }
@@ -543,6 +622,171 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    // --- Subscriptions CRUD ---
+
+    fun getAllSubscriptions(): List<SubscriptionItem> {
+        val list = mutableListOf<SubscriptionItem>()
+        val db = readableDatabase
+        val cursor = db.query(TABLE_SUBSCRIPTIONS, null, null, null, null, null, "$COL_SUB_NEXT_DUE_DATE_MILLIS ASC")
+        cursor.use {
+            while (it.moveToNext()) {
+                val lastLogged = if (it.isNull(it.getColumnIndexOrThrow(COL_SUB_LAST_LOGGED_DATE_MILLIS))) null
+                else it.getLong(it.getColumnIndexOrThrow(COL_SUB_LAST_LOGGED_DATE_MILLIS))
+
+                list.add(
+                    SubscriptionItem(
+                        id = it.getString(it.getColumnIndexOrThrow(COL_SUB_ID)),
+                        name = it.getString(it.getColumnIndexOrThrow(COL_SUB_NAME)),
+                        amountPaise = it.getLong(it.getColumnIndexOrThrow(COL_SUB_AMOUNT_PAISE)),
+                        category = it.getString(it.getColumnIndexOrThrow(COL_SUB_CATEGORY)),
+                        account = it.getString(it.getColumnIndexOrThrow(COL_SUB_ACCOUNT)),
+                        billingCycle = BillingCycle.fromString(it.getString(it.getColumnIndexOrThrow(COL_SUB_BILLING_CYCLE))),
+                        dueDay = it.getInt(it.getColumnIndexOrThrow(COL_SUB_DUE_DAY)),
+                        startDateMillis = it.getLong(it.getColumnIndexOrThrow(COL_SUB_START_DATE_MILLIS)),
+                        nextDueDateMillis = it.getLong(it.getColumnIndexOrThrow(COL_SUB_NEXT_DUE_DATE_MILLIS)),
+                        isActive = it.getInt(it.getColumnIndexOrThrow(COL_SUB_IS_ACTIVE)) == 1,
+                        autoLog = it.getInt(it.getColumnIndexOrThrow(COL_SUB_AUTO_LOG)) == 1,
+                        lastLoggedDateMillis = lastLogged,
+                        colorHex = it.getString(it.getColumnIndexOrThrow(COL_SUB_COLOR)) ?: "#EF4444",
+                        iconKey = it.getString(it.getColumnIndexOrThrow(COL_SUB_ICON)) ?: "Movie"
+                    )
+                )
+            }
+        }
+        return list
+    }
+
+    fun insertSubscription(sub: SubscriptionItem): Long {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put(COL_SUB_ID, sub.id)
+            put(COL_SUB_NAME, sub.name)
+            put(COL_SUB_AMOUNT_PAISE, sub.amountPaise)
+            put(COL_SUB_CATEGORY, sub.category)
+            put(COL_SUB_ACCOUNT, sub.account)
+            put(COL_SUB_BILLING_CYCLE, sub.billingCycle.name)
+            put(COL_SUB_DUE_DAY, sub.dueDay)
+            put(COL_SUB_START_DATE_MILLIS, sub.startDateMillis)
+            put(COL_SUB_NEXT_DUE_DATE_MILLIS, sub.nextDueDateMillis)
+            put(COL_SUB_IS_ACTIVE, if (sub.isActive) 1 else 0)
+            put(COL_SUB_AUTO_LOG, if (sub.autoLog) 1 else 0)
+            if (sub.lastLoggedDateMillis != null) {
+                put(COL_SUB_LAST_LOGGED_DATE_MILLIS, sub.lastLoggedDateMillis)
+            } else {
+                putNull(COL_SUB_LAST_LOGGED_DATE_MILLIS)
+            }
+            put(COL_SUB_COLOR, sub.colorHex)
+            put(COL_SUB_ICON, sub.iconKey)
+        }
+        return db.insertWithOnConflict(TABLE_SUBSCRIPTIONS, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun updateSubscription(sub: SubscriptionItem): Int {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put(COL_SUB_NAME, sub.name)
+            put(COL_SUB_AMOUNT_PAISE, sub.amountPaise)
+            put(COL_SUB_CATEGORY, sub.category)
+            put(COL_SUB_ACCOUNT, sub.account)
+            put(COL_SUB_BILLING_CYCLE, sub.billingCycle.name)
+            put(COL_SUB_DUE_DAY, sub.dueDay)
+            put(COL_SUB_START_DATE_MILLIS, sub.startDateMillis)
+            put(COL_SUB_NEXT_DUE_DATE_MILLIS, sub.nextDueDateMillis)
+            put(COL_SUB_IS_ACTIVE, if (sub.isActive) 1 else 0)
+            put(COL_SUB_AUTO_LOG, if (sub.autoLog) 1 else 0)
+            if (sub.lastLoggedDateMillis != null) {
+                put(COL_SUB_LAST_LOGGED_DATE_MILLIS, sub.lastLoggedDateMillis)
+            } else {
+                putNull(COL_SUB_LAST_LOGGED_DATE_MILLIS)
+            }
+            put(COL_SUB_COLOR, sub.colorHex)
+            put(COL_SUB_ICON, sub.iconKey)
+        }
+        return db.update(TABLE_SUBSCRIPTIONS, cv, "$COL_SUB_ID = ?", arrayOf(sub.id))
+    }
+
+    fun deleteSubscription(id: String): Int {
+        val db = writableDatabase
+        return db.delete(TABLE_SUBSCRIPTIONS, "$COL_SUB_ID = ?", arrayOf(id))
+    }
+
+    fun logSubscriptionPayment(subId: String): TransactionItem? {
+        val db = writableDatabase
+        val cursor = db.query(TABLE_SUBSCRIPTIONS, null, "$COL_SUB_ID = ?", arrayOf(subId), null, null, null)
+        var subItem: SubscriptionItem? = null
+        cursor.use {
+            if (it.moveToFirst()) {
+                val lastLogged = if (it.isNull(it.getColumnIndexOrThrow(COL_SUB_LAST_LOGGED_DATE_MILLIS))) null
+                else it.getLong(it.getColumnIndexOrThrow(COL_SUB_LAST_LOGGED_DATE_MILLIS))
+
+                subItem = SubscriptionItem(
+                    id = it.getString(it.getColumnIndexOrThrow(COL_SUB_ID)),
+                    name = it.getString(it.getColumnIndexOrThrow(COL_SUB_NAME)),
+                    amountPaise = it.getLong(it.getColumnIndexOrThrow(COL_SUB_AMOUNT_PAISE)),
+                    category = it.getString(it.getColumnIndexOrThrow(COL_SUB_CATEGORY)),
+                    account = it.getString(it.getColumnIndexOrThrow(COL_SUB_ACCOUNT)),
+                    billingCycle = BillingCycle.fromString(it.getString(it.getColumnIndexOrThrow(COL_SUB_BILLING_CYCLE))),
+                    dueDay = it.getInt(it.getColumnIndexOrThrow(COL_SUB_DUE_DAY)),
+                    startDateMillis = it.getLong(it.getColumnIndexOrThrow(COL_SUB_START_DATE_MILLIS)),
+                    nextDueDateMillis = it.getLong(it.getColumnIndexOrThrow(COL_SUB_NEXT_DUE_DATE_MILLIS)),
+                    isActive = it.getInt(it.getColumnIndexOrThrow(COL_SUB_IS_ACTIVE)) == 1,
+                    autoLog = it.getInt(it.getColumnIndexOrThrow(COL_SUB_AUTO_LOG)) == 1,
+                    lastLoggedDateMillis = lastLogged,
+                    colorHex = it.getString(it.getColumnIndexOrThrow(COL_SUB_COLOR)) ?: "#EF4444",
+                    iconKey = it.getString(it.getColumnIndexOrThrow(COL_SUB_ICON)) ?: "Movie"
+                )
+            }
+        }
+        val sub = subItem ?: return null
+
+        val now = System.currentTimeMillis()
+        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.US)
+        val formattedDate = sdf.format(Date(now))
+
+        val txn = TransactionItem(
+            id = "txn_${UUID.randomUUID()}",
+            title = sub.name,
+            category = sub.category,
+            account = sub.account,
+            amountPaise = sub.amountPaise,
+            type = TransactionType.EXPENSE,
+            formattedDate = formattedDate,
+            note = "Recurring Bill Payment (${sub.billingCycle.displayName})",
+            iconName = sub.iconKey,
+            timestamp = now
+        )
+
+        db.beginTransaction()
+        try {
+            val cvTxn = ContentValues().apply {
+                put(COL_TXN_ID, txn.id)
+                put(COL_TXN_TITLE, txn.title)
+                put(COL_TXN_CATEGORY, txn.category)
+                put(COL_TXN_ACCOUNT, txn.account)
+                put(COL_TXN_AMOUNT_PAISE, txn.amountPaise)
+                put(COL_TXN_TYPE, txn.type.name)
+                put(COL_TXN_DATE, txn.formattedDate)
+                put(COL_TXN_NOTE, txn.note)
+                put(COL_TXN_ICON, txn.iconName)
+                put(COL_TXN_TIMESTAMP, txn.timestamp)
+            }
+            db.insert(TABLE_TRANSACTIONS, null, cvTxn)
+
+            val nextDue = SubscriptionItem.calculateNextDueDate(sub.dueDay, sub.billingCycle)
+            val cvSub = ContentValues().apply {
+                put(COL_SUB_NEXT_DUE_DATE_MILLIS, nextDue)
+                put(COL_SUB_LAST_LOGGED_DATE_MILLIS, now)
+            }
+            db.update(TABLE_SUBSCRIPTIONS, cvSub, "$COL_SUB_ID = ?", arrayOf(sub.id))
+
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+
+        return txn
+    }
+
     fun resetToDefaults() {
         val db = writableDatabase
         db.execSQL("DELETE FROM $TABLE_TRANSACTIONS")
@@ -550,6 +794,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL("DELETE FROM $TABLE_PREFERENCES")
         db.execSQL("DELETE FROM $TABLE_ACCOUNTS")
         db.execSQL("DELETE FROM $TABLE_CATEGORIES")
+        db.execSQL("DELETE FROM $TABLE_SUBSCRIPTIONS")
         onCreate(db)
     }
 }

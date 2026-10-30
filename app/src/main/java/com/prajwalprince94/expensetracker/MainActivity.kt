@@ -43,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import com.prajwalprince94.expensetracker.data.model.AccountItem
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.navigation.Screen
@@ -60,6 +61,7 @@ import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.security.SecurityLockScreen
 import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
+import com.prajwalprince94.expensetracker.ui.subscriptions.SubscriptionsScreen
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseTrackerTheme
 import com.prajwalprince94.expensetracker.ui.transaction.TransactionsScreen
 import kotlinx.coroutines.launch
@@ -77,6 +79,7 @@ class MainActivity : FragmentActivity() {
             val budgets by repository.budgets.collectAsState()
             val accounts by repository.accounts.collectAsState()
             val categories by repository.categories.collectAsState()
+            val subscriptions by repository.subscriptions.collectAsState()
             val isLoaded by repository.isLoaded.collectAsState()
 
             var hasBooted by remember { mutableStateOf(false) }
@@ -147,6 +150,7 @@ class MainActivity : FragmentActivity() {
                                 budgets = budgets,
                                 accounts = accounts,
                                 categories = categories,
+                                subscriptions = subscriptions,
                                 onAddTransaction = { txn ->
                                     ExpenseGraph.appScope.launch {
                                         repository.addTransaction(txn)
@@ -187,6 +191,26 @@ class MainActivity : FragmentActivity() {
                                         repository.deleteCategory(id)
                                     }
                                 },
+                                onAddSubscription = { sub ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addSubscription(sub)
+                                    }
+                                },
+                                onUpdateSubscription = { sub ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.updateSubscription(sub)
+                                    }
+                                },
+                                onDeleteSubscription = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.deleteSubscription(id)
+                                    }
+                                },
+                                onLogSubscriptionPayment = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.logSubscriptionPayment(id)
+                                    }
+                                },
                                 onUpdatePreferences = { newPrefs ->
                                     ExpenseGraph.appScope.launch {
                                         repository.savePreferences(newPrefs)
@@ -219,6 +243,7 @@ fun MainApp(
     budgets: List<CategoryBudgetItem>,
     accounts: List<AccountItem>,
     categories: List<CategoryItem>,
+    subscriptions: List<SubscriptionItem>,
     onAddTransaction: (TransactionItem) -> Unit,
     onDeleteTransaction: (String) -> Unit,
     onUpdateBudgetLimit: (String, Long) -> Unit,
@@ -227,6 +252,10 @@ fun MainApp(
     onDeleteAccount: (String) -> Unit,
     onAddCategory: (CategoryItem) -> Unit,
     onDeleteCategory: (String) -> Unit,
+    onAddSubscription: (SubscriptionItem) -> Unit,
+    onUpdateSubscription: (SubscriptionItem) -> Unit,
+    onDeleteSubscription: (String) -> Unit,
+    onLogSubscriptionPayment: (String) -> Unit,
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit
@@ -304,6 +333,7 @@ fun MainApp(
                     HomeScreen(
                         transactions = transactions,
                         accounts = accounts,
+                        subscriptions = subscriptions,
                         onOpenQuickAdd = { type ->
                             quickAddInitialType = type
                             showQuickAddSheet = true
@@ -320,6 +350,10 @@ fun MainApp(
                         onNavigateToAccounts = {
                             navController.navigate(Screen.Accounts.route)
                         },
+                        onNavigateToSubscriptions = {
+                            navController.navigate(Screen.Subscriptions.route)
+                        },
+                        onLogSubscriptionPayment = onLogSubscriptionPayment,
                         onSelectTransaction = { txn ->
                             selectedTransactionForDetail = txn
                         },
@@ -357,8 +391,12 @@ fun MainApp(
                         transactions = transactions,
                         accounts = accounts,
                         categories = categories,
+                        subscriptions = subscriptions,
                         onNavigateToAccounts = {
                             navController.navigate(Screen.Accounts.route)
+                        },
+                        onNavigateToSubscriptions = {
+                            navController.navigate(Screen.Subscriptions.route)
                         },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
@@ -379,6 +417,22 @@ fun MainApp(
                         onDeleteAccount = onDeleteAccount,
                         onAddCategory = onAddCategory,
                         onDeleteCategory = onDeleteCategory,
+                        onNavigateBack = { navController.popBackStack() },
+                        onShowMessage = { msg ->
+                            scope.launch { snackbarHostState.showSnackbar(msg) }
+                        }
+                    )
+                }
+
+                composable(Screen.Subscriptions.route) {
+                    SubscriptionsScreen(
+                        subscriptions = subscriptions,
+                        accounts = accounts,
+                        categories = categories,
+                        onAddSubscription = onAddSubscription,
+                        onUpdateSubscription = onUpdateSubscription,
+                        onDeleteSubscription = onDeleteSubscription,
+                        onLogPayment = onLogSubscriptionPayment,
                         onNavigateBack = { navController.popBackStack() },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }
