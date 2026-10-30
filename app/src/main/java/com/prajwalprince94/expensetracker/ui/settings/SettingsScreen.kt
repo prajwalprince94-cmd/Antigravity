@@ -115,6 +115,7 @@ fun SettingsScreen(
     onOpenSmsSync: () -> Unit = {},
     onOpenPdfExport: () -> Unit = {},
     onOpenCurrencyConverter: () -> Unit = {},
+    onOpenSupabaseSync: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -836,12 +837,42 @@ fun SettingsScreen(
             }
         }
 
-        // 8. About App
+        // 8. Supabase Real-Time Cloud Sync
         item {
+            SectionHeader(title = "Supabase Cloud Sync", modifier = Modifier.entrance(8))
+            Spacer(modifier = Modifier.height(4.dp))
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .entrance(8),
+                contentPadding = 12.dp
+            ) {
+                Column {
+                    SettingActionRow(
+                        icon = Icons.Default.CloudSync,
+                        title = "Supabase Real-Time Sync",
+                        subtitle = if (preferences.supabaseSandboxMode) {
+                            "Developer Sandbox Mode • Instant multi-device sync & conflict engine"
+                        } else if (preferences.supabaseUrl.isNotBlank()) {
+                            "Connected to Supabase • Auto-sync enabled"
+                        } else {
+                            "Configure Supabase project URL, API keys & conflict resolution"
+                        },
+                        onClick = {
+                            haptics.confirm()
+                            onOpenSupabaseSync()
+                        }
+                    )
+                }
+            }
+        }
+
+        // 9. About App
+        item {
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(9),
                 contentPadding = 16.dp
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

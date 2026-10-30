@@ -72,6 +72,7 @@ import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
 import com.prajwalprince94.expensetracker.ui.sms.SmsSyncSheet
 import com.prajwalprince94.expensetracker.ui.split.SplitGroupsScreen
 import com.prajwalprince94.expensetracker.ui.subscriptions.SubscriptionsScreen
+import com.prajwalprince94.expensetracker.ui.sync.SupabaseSyncSheet
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseTrackerTheme
 import com.prajwalprince94.expensetracker.ui.transaction.TransactionsScreen
 import kotlinx.coroutines.launch
@@ -372,6 +373,9 @@ fun MainApp(
     var showCurrencyConverterSheet by remember { mutableStateOf(false) }
     val currencyConverterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    var showSupabaseSyncSheet by remember { mutableStateOf(false) }
+    val supabaseSyncSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(incomingAction) {
         when (incomingAction) {
             MainActivity.ACTION_QUICK_ADD -> {
@@ -564,6 +568,9 @@ fun MainApp(
                         },
                         onOpenCurrencyConverter = {
                             showCurrencyConverterSheet = true
+                        },
+                        onOpenSupabaseSync = {
+                            showSupabaseSyncSheet = true
                         },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
@@ -764,6 +771,20 @@ fun MainApp(
                 preferences = preferences,
                 onUpdatePreferences = onUpdatePreferences,
                 onDismiss = { showCurrencyConverterSheet = false },
+                onShowMessage = { msg ->
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                }
+            )
+        }
+
+        // Supabase Real-Time Cloud Sync Bottom Sheet
+        if (showSupabaseSyncSheet) {
+            SupabaseSyncSheet(
+                sheetState = supabaseSyncSheetState,
+                preferences = preferences,
+                transactions = transactions,
+                onUpdatePreferences = onUpdatePreferences,
+                onDismiss = { showSupabaseSyncSheet = false },
                 onShowMessage = { msg ->
                     scope.launch { snackbarHostState.showSnackbar(msg) }
                 }

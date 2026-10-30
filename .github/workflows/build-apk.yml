@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.5.0-supabase-sync.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.4.0-multi-currency.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.3.0-pdf-tax-statement.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk
@@ -62,24 +63,25 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v3.4.0"
-          name: "Expense Tracker v3.4.0 (Multi-Currency Support & Live FX Conversion Engine)"
+          tag_name: "v3.5.0"
+          name: "Expense Tracker v3.5.0 (Supabase Real-Time Cloud Sync & Offline Conflict Engine)"
           body: |
-            ### 📱 Expense Tracker v3.4.0 (Multi-Currency Support & Live FX Conversion Engine)
-            - **Global Multi-Currency & On-Device FX Engine (`CurrencyEngine`):**
-              - Supports 11 major world currencies: **INR (₹), USD ($), EUR (€), GBP (£), AED (د.إ), SGD (S$), JPY (¥), CAD (C$), AUD (A$), THB (฿), SAR (﷼)**.
-              - **100% Offline-First Architecture:** Pre-loaded with reliable offline baseline exchange rates so conversions work without internet connectivity.
-              - Dynamic live rate refresh capability with micro-market variance calculation.
-            - **Seamless Foreign Currency Transaction Entry (`QuickAddTransactionSheet`):**
-              - **Interactive Currency Picker Chip:** Select foreign currencies directly in the hero keypad amount header with country flag badges.
-              - **Real-Time Base Currency Conversion Pill:** Instant live feedback showing equivalent INR amount and conversion rate before saving.
-              - **Complete Audit Trail:** Persists original currency code, original units, and exchange rate in SQLite while normalizing base paise for 100% financial correctness across budgets and charts.
-            - **Interactive Currency Converter & FX Market Sheet (`CurrencyConverterSheet`):**
-              - Instant bidirectional currency converter with 1-tap currency swapping.
-              - Real-time market exchange rates board against base currency.
-              - Configurable base currency selector in Settings.
-            - **Foreign Currency Transaction Details (`TransactionDetailSheet`):**
-              - Displays original foreign currency amount, currency badge, and exchange rate on transaction inspection.
+            ### 📱 Expense Tracker v3.5.0 (Supabase Real-Time Cloud Sync & Offline Conflict Engine)
+            - **Supabase Cloud Synchronization Engine (`SupabaseSyncEngine`):**
+              - Native Android HTTP PostgREST integration communicating directly with Supabase tables (`/rest/v1/transactions`).
+              - **100% Offline-First Core:** Operates with zero network latency on device; changes are queued and synced automatically when connected.
+              - **Developer Demo Sandbox Mode:** Pre-loaded simulation engine allowing instant testing of upload, download, and merge workflows without requiring an active Supabase project.
+              - **Enterprise Conflict Resolution Suite (`ConflictResolutionStrategy`):**
+                - *Latest Timestamp (LWW)*: Automatically keeps the most recent edit across devices.
+                - *Cloud Server Wins*: Resolves discrepancies by prioritizing cloud records.
+                - *Local Device Wins*: Resolves discrepancies by prioritizing device state.
+              - **Connection Health Checker:** Live ping test verifying Project URL and Anon API Key validity.
+              - **Live Activity & Audit Log:** Real-time log tracking records pushed, pulled, conflicts handled, and timestamp history.
+            - **Interactive Cloud Sync Sheet (`SupabaseSyncSheet`):**
+              - Hero sync status card with online/offline/syncing status pills.
+              - 1-tap "Sync Now" action with animated progress indicator.
+              - Supabase URL & Anon API Key credential configuration fields.
+            - **Multi-Currency Support & Live FX Conversion Engine (v3.4.0)**
             - **Advanced PDF Tax Statement & Financial Report Generator (v3.3.0)**
             - **Smart Budget Forecasting & AI Insights (v3.2.0)**
             - **Interactive Home Screen Widgets with Jetpack Glance (v3.1.0)**
@@ -91,10 +93,11 @@ jobs:
             - **Biometric & PIN Security Suite (v2.5.0)**
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v3.4.0-multi-currency.apk`** below under Assets.
+            Download **`ExpenseTracker-v3.5.0-supabase-sync.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v3.5.0-supabase-sync.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.4.0-multi-currency.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.3.0-pdf-tax-statement.apk
             app/build/outputs/apk/debug/ExpenseTracker-v3.2.0-budget-forecast.apk

@@ -721,6 +721,12 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         var autoLockTimeoutSeconds = 0
         var recentsPrivacyBlur = true
         var baseCurrency = "INR"
+        var supabaseSyncEnabled = false
+        var supabaseUrl = ""
+        var supabaseAnonKey = ""
+        var supabaseSandboxMode = true
+        var supabaseConflictStrategy = "LATEST_TIMESTAMP"
+        var lastSyncTimestampMillis = 0L
 
         val cursor = db.query(TABLE_PREFERENCES, null, null, null, null, null, null)
         cursor.use {
@@ -741,6 +747,12 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                     "autoLockTimeoutSeconds" -> runCatching { autoLockTimeoutSeconds = value.toInt() }
                     "recentsPrivacyBlur" -> recentsPrivacyBlur = value.toBoolean()
                     "baseCurrency" -> baseCurrency = value
+                    "supabaseSyncEnabled" -> supabaseSyncEnabled = value.toBoolean()
+                    "supabaseUrl" -> supabaseUrl = value
+                    "supabaseAnonKey" -> supabaseAnonKey = value
+                    "supabaseSandboxMode" -> supabaseSandboxMode = value.toBoolean()
+                    "supabaseConflictStrategy" -> supabaseConflictStrategy = value
+                    "lastSyncTimestampMillis" -> runCatching { lastSyncTimestampMillis = value.toLong() }
                 }
             }
         }
@@ -757,7 +769,13 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             appLockPinHash = appLockPinHash,
             autoLockTimeoutSeconds = autoLockTimeoutSeconds,
             recentsPrivacyBlur = recentsPrivacyBlur,
-            baseCurrency = baseCurrency
+            baseCurrency = baseCurrency,
+            supabaseSyncEnabled = supabaseSyncEnabled,
+            supabaseUrl = supabaseUrl,
+            supabaseAnonKey = supabaseAnonKey,
+            supabaseSandboxMode = supabaseSandboxMode,
+            supabaseConflictStrategy = supabaseConflictStrategy,
+            lastSyncTimestampMillis = lastSyncTimestampMillis
         )
     }
 
@@ -776,7 +794,13 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             "appLockPinHash" to prefs.appLockPinHash,
             "autoLockTimeoutSeconds" to prefs.autoLockTimeoutSeconds.toString(),
             "recentsPrivacyBlur" to prefs.recentsPrivacyBlur.toString(),
-            "baseCurrency" to prefs.baseCurrency
+            "baseCurrency" to prefs.baseCurrency,
+            "supabaseSyncEnabled" to prefs.supabaseSyncEnabled.toString(),
+            "supabaseUrl" to prefs.supabaseUrl,
+            "supabaseAnonKey" to prefs.supabaseAnonKey,
+            "supabaseSandboxMode" to prefs.supabaseSandboxMode.toString(),
+            "supabaseConflictStrategy" to prefs.supabaseConflictStrategy,
+            "lastSyncTimestampMillis" to prefs.lastSyncTimestampMillis.toString()
         )
         db.beginTransaction()
         try {

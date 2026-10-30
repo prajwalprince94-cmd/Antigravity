@@ -31,5 +31,11 @@ data class AppPreferences(
     val appLockPinHash: String = "",
     val autoLockTimeoutSeconds: Int = 0, // 0: Immediately, 60: 1 min, 300: 5 min
     val recentsPrivacyBlur: Boolean = true,
-    val baseCurrency: String = "INR"
+    val baseCurrency: String = "INR",
+    val supabaseSyncEnabled: Boolean = false,
+    val supabaseUrl: String = "",
+    val supabaseAnonKey: String = "",
+    val supabaseSandboxMode: Boolean = true,
+    val supabaseConflictStrategy: String = "LATEST_TIMESTAMP",
+    val lastSyncTimestampMillis: Long = 0L
 )
