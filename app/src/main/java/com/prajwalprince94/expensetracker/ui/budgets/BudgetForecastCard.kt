@@ -123,9 +123,8 @@ fun BudgetForecastCard(
                 }
 
                 StatusPill(
-                    text = forecast.healthStatus.label,
-                    backgroundColor = statusBg,
-                    contentColor = statusColor
+                    label = forecast.healthStatus.label,
+                    color = statusColor
                 )
             }
 
@@ -429,9 +428,8 @@ private fun InsightMiniCard(insight: ActionableInsight) {
                 }
                 if (insight.impactBadge.isNotBlank()) {
                     StatusPill(
-                        text = insight.impactBadge,
-                        backgroundColor = borderColor.copy(alpha = 0.15f),
-                        contentColor = borderColor
+                        label = insight.impactBadge,
+                        color = borderColor
                     )
                 }
             }
@@ -491,9 +489,8 @@ private fun CategoryForecastRow(cat: CategoryForecast) {
 
             Column(horizontalAlignment = Alignment.End) {
                 StatusPill(
-                    text = cat.status.label,
-                    backgroundColor = statusColor.copy(alpha = 0.15f),
-                    contentColor = statusColor
+                    label = cat.status.label,
+                    color = statusColor
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(

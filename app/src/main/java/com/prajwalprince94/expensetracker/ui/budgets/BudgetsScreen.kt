@@ -399,7 +399,7 @@ fun BudgetsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val catForecast = forecast.categoryForecasts.find { it.categoryId == budget.id || it.categoryName == budget.categoryName }
+                        val catForecast = forecast.categoryForecasts.find { it.categoryId == budget.id || it.categoryName == budget.category }
                         if (catForecast != null) {
                             val catStatusColor = Color(catForecast.status.colorHex)
                             Text(

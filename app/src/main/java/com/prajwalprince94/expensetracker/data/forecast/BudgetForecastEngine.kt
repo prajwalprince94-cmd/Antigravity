@@ -84,7 +84,7 @@ object BudgetForecastEngine {
 
             CategoryForecast(
                 categoryId = budget.id,
-                categoryName = budget.categoryName,
+                categoryName = budget.category,
                 categoryIcon = budget.iconName,
                 currentSpentPaise = catSpent,
                 limitPaise = catLimit,
