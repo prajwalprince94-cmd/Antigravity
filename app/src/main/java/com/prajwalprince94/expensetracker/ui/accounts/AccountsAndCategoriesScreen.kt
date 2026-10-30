@@ -32,7 +32,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -323,6 +325,7 @@ fun AccountsAndCategoriesScreen(
             if (accounts.isEmpty()) {
                 item {
                     EmptyStateView(
+                        icon = Icons.Default.AccountBalanceWallet,
                         title = "No Accounts Found",
                         subtitle = "Create your first bank, UPI wallet, or cash container.",
                         actionLabel = "Add Account",
@@ -537,6 +540,7 @@ fun AccountsAndCategoriesScreen(
             if (filteredCategories.isEmpty()) {
                 item {
                     EmptyStateView(
+                        icon = Icons.Default.Category,
                         title = "No Categories Found",
                         subtitle = "Create custom category tags to classify your spending.",
                         actionLabel = "Add Category",
