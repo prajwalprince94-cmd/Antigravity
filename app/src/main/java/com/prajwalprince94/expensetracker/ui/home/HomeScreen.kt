@@ -68,8 +68,6 @@ import com.prajwalprince94.expensetracker.ui.components.glow
 import com.prajwalprince94.expensetracker.ui.components.isWideScreen
 import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.components.responsiveHorizontalPadding
-import com.prajwalprince94.expensetracker.data.model.AccountItem
-import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.ui.components.IconRegistry
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType

@@ -155,7 +155,7 @@ fun SplitGroupsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = {
-                            haptics.lightTap()
+                            haptics.light()
                             if (currentSelectedGroup != null) {
                                 selectedGroup = null
                             } else {
@@ -193,7 +193,7 @@ fun SplitGroupsScreen(
                     if (currentSelectedGroup != null) {
                         IconButton(
                             onClick = {
-                                haptics.lightTap()
+                                haptics.light()
                                 groupToDelete = currentSelectedGroup
                             }
                         ) {
@@ -206,7 +206,7 @@ fun SplitGroupsScreen(
                     }
                     Button(
                         onClick = {
-                            haptics.buttonClick()
+                            haptics.confirm()
                             if (currentSelectedGroup != null) {
                                 showAddBillSheet = true
                             } else {
@@ -241,15 +241,15 @@ fun SplitGroupsScreen(
                     summary = selectedGroupSummary,
                     bills = bills.filter { it.groupId == currentSelectedGroup.id },
                     onSettleUp = { transfer ->
-                        haptics.lightTap()
+                        haptics.light()
                         debtToSettle = currentSelectedGroup to transfer
                     },
                     onDeleteBill = { bill ->
-                        haptics.lightTap()
+                        haptics.light()
                         billToDelete = bill
                     },
                     onAddBillClick = {
-                        haptics.buttonClick()
+                        haptics.confirm()
                         showAddBillSheet = true
                     }
                 )
@@ -261,15 +261,15 @@ fun SplitGroupsScreen(
                     overallSummary = allGroupsSummary,
                     activeFilter = activeFilter,
                     onFilterSelected = {
-                        haptics.selectionToggle()
+                        haptics.selection()
                         activeFilter = it
                     },
                     onGroupClick = { group ->
-                        haptics.lightTap()
+                        haptics.light()
                         selectedGroup = group
                     },
                     onCreateGroupClick = {
-                        haptics.buttonClick()
+                        haptics.confirm()
                         showCreateGroupSheet = true
                     }
                 )
@@ -411,7 +411,7 @@ private fun AllGroupsContent(
         modifier = Modifier
             .fillMaxSize()
             .fadingEdges()
-            .responsiveHorizontalPadding(),
+            .padding(horizontal = responsiveHorizontalPadding()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Hero Net Balance Card
@@ -515,7 +515,7 @@ private fun HeroNetBalanceCard(summary: GroupBalanceSummary) {
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .entrance(slideFromBottom = true)
+            .entrance(1)
     ) {
         Column(
             modifier = Modifier
@@ -777,7 +777,7 @@ private fun GroupDetailContent(
         modifier = Modifier
             .fillMaxSize()
             .fadingEdges()
-            .responsiveHorizontalPadding(),
+            .padding(horizontal = responsiveHorizontalPadding()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Net Balance Card for this specific group
