@@ -752,8 +752,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
             type = TransactionType.EXPENSE,
             formattedDate = formattedDate,
             note = "Recurring Bill Payment (${sub.billingCycle.displayName})",
-            iconName = sub.iconKey,
-            timestamp = now
+            iconName = sub.iconKey
         )
 
         db.beginTransaction()
@@ -768,7 +767,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_TXN_DATE, txn.formattedDate)
                 put(COL_TXN_NOTE, txn.note)
                 put(COL_TXN_ICON, txn.iconName)
-                put(COL_TXN_TIMESTAMP, txn.timestamp)
+                put(COL_TXN_TIMESTAMP, now)
             }
             db.insert(TABLE_TRANSACTIONS, null, cvTxn)
 
