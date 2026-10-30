@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MotionPhotosOff
@@ -101,6 +102,7 @@ fun SettingsScreen(
     onNavigateToAccounts: () -> Unit = {},
     onNavigateToSubscriptions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
+    onNavigateToSplit: () -> Unit = {},
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
@@ -611,6 +613,28 @@ fun SettingsScreen(
                     onClick = {
                         haptics.confirm()
                         onNavigateToAnalytics()
+                    }
+                )
+            }
+        }
+
+        // 5.8 Split Expenses & Shared Groups
+        item {
+            SectionHeader(title = "Split Bills & Group Expenses", modifier = Modifier.entrance(5))
+            Spacer(modifier = Modifier.height(4.dp))
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .entrance(5),
+                contentPadding = 12.dp
+            ) {
+                SettingActionRow(
+                    icon = Icons.Default.Group,
+                    title = "Split Expenses with Friends",
+                    subtitle = "Track group balances, debt simplification & one-tap settlements",
+                    onClick = {
+                        haptics.confirm()
+                        onNavigateToSplit()
                     }
                 )
             }

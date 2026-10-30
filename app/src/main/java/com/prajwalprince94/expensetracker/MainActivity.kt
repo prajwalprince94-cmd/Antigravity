@@ -43,6 +43,8 @@ import androidx.navigation.compose.rememberNavController
 import com.prajwalprince94.expensetracker.data.model.AccountItem
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SplitBillItem
+import com.prajwalprince94.expensetracker.data.model.SplitGroup
 import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
@@ -62,6 +64,7 @@ import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.security.SecurityLockScreen
 import com.prajwalprince94.expensetracker.ui.settings.SettingsScreen
+import com.prajwalprince94.expensetracker.ui.split.SplitGroupsScreen
 import com.prajwalprince94.expensetracker.ui.subscriptions.SubscriptionsScreen
 import com.prajwalprince94.expensetracker.ui.theme.ExpenseTrackerTheme
 import com.prajwalprince94.expensetracker.ui.transaction.TransactionsScreen
@@ -81,6 +84,8 @@ class MainActivity : FragmentActivity() {
             val accounts by repository.accounts.collectAsState()
             val categories by repository.categories.collectAsState()
             val subscriptions by repository.subscriptions.collectAsState()
+            val splitGroups by repository.splitGroups.collectAsState()
+            val splitBills by repository.splitBills.collectAsState()
             val isLoaded by repository.isLoaded.collectAsState()
 
             var hasBooted by remember { mutableStateOf(false) }
@@ -212,6 +217,38 @@ class MainActivity : FragmentActivity() {
                                         repository.logSubscriptionPayment(id)
                                     }
                                 },
+                                splitGroups = splitGroups,
+                                splitBills = splitBills,
+                                onAddSplitGroup = { grp ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addSplitGroup(grp)
+                                    }
+                                },
+                                onUpdateSplitGroup = { grp ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.updateSplitGroup(grp)
+                                    }
+                                },
+                                onDeleteSplitGroup = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.deleteSplitGroup(id)
+                                    }
+                                },
+                                onAddSplitBill = { bill ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.addSplitBill(bill)
+                                    }
+                                },
+                                onDeleteSplitBill = { id ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.deleteSplitBill(id)
+                                    }
+                                },
+                                onSettleDebt = { groupId, from, to, amt, acc ->
+                                    ExpenseGraph.appScope.launch {
+                                        repository.settleDebt(groupId, from, to, amt, acc)
+                                    }
+                                },
                                 onUpdatePreferences = { newPrefs ->
                                     ExpenseGraph.appScope.launch {
                                         repository.savePreferences(newPrefs)
@@ -257,6 +294,14 @@ fun MainApp(
     onUpdateSubscription: (SubscriptionItem) -> Unit,
     onDeleteSubscription: (String) -> Unit,
     onLogSubscriptionPayment: (String) -> Unit,
+    splitGroups: List<SplitGroup> = emptyList(),
+    splitBills: List<SplitBillItem> = emptyList(),
+    onAddSplitGroup: (SplitGroup) -> Unit = {},
+    onUpdateSplitGroup: (SplitGroup) -> Unit = {},
+    onDeleteSplitGroup: (String) -> Unit = {},
+    onAddSplitBill: (SplitBillItem) -> Unit = {},
+    onDeleteSplitBill: (String) -> Unit = {},
+    onSettleDebt: (groupId: String, fromMember: String, toMember: String, amountPaise: Long, accountName: String) -> Unit = { _, _, _, _, _ -> },
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit
@@ -335,6 +380,8 @@ fun MainApp(
                         transactions = transactions,
                         accounts = accounts,
                         subscriptions = subscriptions,
+                        splitGroups = splitGroups,
+                        splitBills = splitBills,
                         onOpenQuickAdd = { type ->
                             quickAddInitialType = type
                             showQuickAddSheet = true
@@ -356,6 +403,9 @@ fun MainApp(
                         },
                         onNavigateToAnalytics = {
                             navController.navigate(Screen.Analytics.route)
+                        },
+                        onNavigateToSplit = {
+                            navController.navigate(Screen.SplitGroups.route)
                         },
                         onLogSubscriptionPayment = onLogSubscriptionPayment,
                         onSelectTransaction = { txn ->
@@ -408,6 +458,9 @@ fun MainApp(
                         onNavigateToAnalytics = {
                             navController.navigate(Screen.Analytics.route)
                         },
+                        onNavigateToSplit = {
+                            navController.navigate(Screen.SplitGroups.route)
+                        },
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
                         onClearTransactions = onClearTransactions,
@@ -455,6 +508,25 @@ fun MainApp(
                         transactions = transactions,
                         budgets = budgets,
                         subscriptions = subscriptions,
+                        onNavigateBack = { navController.popBackStack() },
+                        onShowMessage = { msg ->
+                            scope.launch { snackbarHostState.showSnackbar(msg) }
+                        }
+                    )
+                }
+
+                composable(Screen.SplitGroups.route) {
+                    SplitGroupsScreen(
+                        groups = splitGroups,
+                        bills = splitBills,
+                        accounts = accounts,
+                        categories = categories,
+                        onAddGroup = onAddSplitGroup,
+                        onUpdateGroup = onUpdateSplitGroup,
+                        onDeleteGroup = onDeleteSplitGroup,
+                        onAddBill = onAddSplitBill,
+                        onDeleteBill = onDeleteSplitBill,
+                        onSettleDebt = onSettleDebt,
                         onNavigateBack = { navController.popBackStack() },
                         onShowMessage = { msg ->
                             scope.launch { snackbarHostState.showSnackbar(msg) }

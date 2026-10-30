@@ -8,7 +8,12 @@ import com.prajwalprince94.expensetracker.data.model.AccountItem
 import com.prajwalprince94.expensetracker.data.model.BillingCycle
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SplitBillItem
+import com.prajwalprince94.expensetracker.data.model.SplitGroup
+import com.prajwalprince94.expensetracker.data.model.SplitMode
 import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
+import org.json.JSONArray
+import org.json.JSONObject
 import com.prajwalprince94.expensetracker.ui.model.AppPalette
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.ColorStyle
@@ -33,7 +38,7 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "expense_tracker.db"
-        const val DATABASE_VERSION = 3
+        const val DATABASE_VERSION = 4
 
         // Transactions table
         const val TABLE_TRANSACTIONS = "transactions"
@@ -82,6 +87,31 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         const val COL_SUB_LAST_LOGGED_DATE_MILLIS = "last_logged_date_millis"
         const val COL_SUB_COLOR = "color_hex"
         const val COL_SUB_ICON = "icon_key"
+
+        // Split Groups table
+        const val TABLE_SPLIT_GROUPS = "split_groups"
+        const val COL_GRP_ID = "id"
+        const val COL_GRP_NAME = "name"
+        const val COL_GRP_DESCRIPTION = "description"
+        const val COL_GRP_MEMBERS_JSON = "members_json"
+        const val COL_GRP_COLOR = "color_hex"
+        const val COL_GRP_ICON = "icon_key"
+        const val COL_GRP_CREATED_DATE = "created_date_millis"
+
+        // Split Bills table
+        const val TABLE_SPLIT_BILLS = "split_bills"
+        const val COL_SBILL_ID = "id"
+        const val COL_SBILL_GROUP_ID = "group_id"
+        const val COL_SBILL_TITLE = "title"
+        const val COL_SBILL_TOTAL_AMOUNT_PAISE = "total_amount_paise"
+        const val COL_SBILL_PAID_BY = "paid_by"
+        const val COL_SBILL_PAYER_ACCOUNT = "payer_account"
+        const val COL_SBILL_SPLIT_MODE = "split_mode"
+        const val COL_SBILL_SHARES_JSON = "shares_json"
+        const val COL_SBILL_DATE = "formatted_date"
+        const val COL_SBILL_CATEGORY = "category"
+        const val COL_SBILL_IS_SETTLED = "is_settled"
+        const val COL_SBILL_SETTLEMENT_DATE = "settlement_date_millis"
 
         // Budgets table
         const val TABLE_BUDGETS = "budgets"
@@ -167,12 +197,14 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
 
         ensureAccountsAndCategories(db)
         ensureSubscriptions(db)
+        ensureSplitTables(db)
     }
 
     override fun onOpen(db: SQLiteDatabase) {
         super.onOpen(db)
         ensureAccountsAndCategories(db)
         ensureSubscriptions(db)
+        ensureSplitTables(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -181,6 +213,9 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         if (oldVersion < 3) {
             ensureSubscriptions(db)
+        }
+        if (oldVersion < 4) {
+            ensureSplitTables(db)
         }
     }
 
@@ -300,6 +335,97 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
                     put(COL_SUB_ICON, sub.iconKey)
                 }
                 db.insert(TABLE_SUBSCRIPTIONS, null, cv)
+            }
+        }
+    }
+
+    /**
+     * Creates split groups and split bills tables if not existing, and seeds defaults.
+     */
+    private fun ensureSplitTables(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_SPLIT_GROUPS (
+                $COL_GRP_ID TEXT PRIMARY KEY,
+                $COL_GRP_NAME TEXT NOT NULL,
+                $COL_GRP_DESCRIPTION TEXT,
+                $COL_GRP_MEMBERS_JSON TEXT NOT NULL,
+                $COL_GRP_COLOR TEXT,
+                $COL_GRP_ICON TEXT,
+                $COL_GRP_CREATED_DATE INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_SPLIT_BILLS (
+                $COL_SBILL_ID TEXT PRIMARY KEY,
+                $COL_SBILL_GROUP_ID TEXT NOT NULL,
+                $COL_SBILL_TITLE TEXT NOT NULL,
+                $COL_SBILL_TOTAL_AMOUNT_PAISE INTEGER NOT NULL,
+                $COL_SBILL_PAID_BY TEXT NOT NULL,
+                $COL_SBILL_PAYER_ACCOUNT TEXT NOT NULL,
+                $COL_SBILL_SPLIT_MODE TEXT NOT NULL,
+                $COL_SBILL_SHARES_JSON TEXT NOT NULL,
+                $COL_SBILL_DATE TEXT NOT NULL,
+                $COL_SBILL_CATEGORY TEXT NOT NULL,
+                $COL_SBILL_IS_SETTLED INTEGER NOT NULL DEFAULT 0,
+                $COL_SBILL_SETTLEMENT_DATE INTEGER
+            )
+            """.trimIndent()
+        )
+
+        // Seed groups if table is empty
+        val grpCursor = db.rawQuery("SELECT COUNT(*) FROM $TABLE_SPLIT_GROUPS", null)
+        val grpCount = if (grpCursor.moveToFirst()) grpCursor.getInt(0) else 0
+        grpCursor.close()
+
+        if (grpCount == 0) {
+            SplitGroup.defaultList().forEach { grp ->
+                val cv = ContentValues().apply {
+                    put(COL_GRP_ID, grp.id)
+                    put(COL_GRP_NAME, grp.name)
+                    put(COL_GRP_DESCRIPTION, grp.description)
+                    val jsonArr = JSONArray()
+                    grp.members.forEach { jsonArr.put(it) }
+                    put(COL_GRP_MEMBERS_JSON, jsonArr.toString())
+                    put(COL_GRP_COLOR, grp.colorHex)
+                    put(COL_GRP_ICON, grp.iconKey)
+                    put(COL_GRP_CREATED_DATE, grp.createdDateMillis)
+                }
+                db.insert(TABLE_SPLIT_GROUPS, null, cv)
+            }
+        }
+
+        // Seed split bills if table is empty
+        val billCursor = db.rawQuery("SELECT COUNT(*) FROM $TABLE_SPLIT_BILLS", null)
+        val billCount = if (billCursor.moveToFirst()) billCursor.getInt(0) else 0
+        billCursor.close()
+
+        if (billCount == 0) {
+            SplitBillItem.defaultList().forEach { bill ->
+                val cv = ContentValues().apply {
+                    put(COL_SBILL_ID, bill.id)
+                    put(COL_SBILL_GROUP_ID, bill.groupId)
+                    put(COL_SBILL_TITLE, bill.title)
+                    put(COL_SBILL_TOTAL_AMOUNT_PAISE, bill.totalAmountPaise)
+                    put(COL_SBILL_PAID_BY, bill.paidBy)
+                    put(COL_SBILL_PAYER_ACCOUNT, bill.payerAccount)
+                    put(COL_SBILL_SPLIT_MODE, bill.splitMode.name)
+                    val jsonObj = JSONObject()
+                    bill.memberShares.forEach { (m, s) -> jsonObj.put(m, s) }
+                    put(COL_SBILL_SHARES_JSON, jsonObj.toString())
+                    put(COL_SBILL_DATE, bill.formattedDate)
+                    put(COL_SBILL_CATEGORY, bill.category)
+                    put(COL_SBILL_IS_SETTLED, if (bill.isSettled) 1 else 0)
+                    if (bill.settlementDateMillis != null) {
+                        put(COL_SBILL_SETTLEMENT_DATE, bill.settlementDateMillis)
+                    } else {
+                        putNull(COL_SBILL_SETTLEMENT_DATE)
+                    }
+                }
+                db.insert(TABLE_SPLIT_BILLS, null, cv)
             }
         }
     }
@@ -786,6 +912,299 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return txn
     }
 
+    // --- Split Groups CRUD ---
+
+    fun getAllSplitGroups(): List<SplitGroup> {
+        val list = mutableListOf<SplitGroup>()
+        val db = readableDatabase
+        val cursor = db.query(TABLE_SPLIT_GROUPS, null, null, null, null, null, "$COL_GRP_CREATED_DATE DESC")
+        cursor.use {
+            while (it.moveToNext()) {
+                val id = it.getString(it.getColumnIndexOrThrow(COL_GRP_ID))
+                val name = it.getString(it.getColumnIndexOrThrow(COL_GRP_NAME))
+                val desc = it.getString(it.getColumnIndexOrThrow(COL_GRP_DESCRIPTION)) ?: ""
+                val membersJson = it.getString(it.getColumnIndexOrThrow(COL_GRP_MEMBERS_JSON)) ?: "[]"
+                val color = it.getString(it.getColumnIndexOrThrow(COL_GRP_COLOR)) ?: "#3B82F6"
+                val icon = it.getString(it.getColumnIndexOrThrow(COL_GRP_ICON)) ?: "Home"
+                val created = it.getLong(it.getColumnIndexOrThrow(COL_GRP_CREATED_DATE))
+
+                val members = mutableListOf<String>()
+                try {
+                    val arr = JSONArray(membersJson)
+                    for (i in 0 until arr.length()) {
+                        members.add(arr.getString(i))
+                    }
+                } catch (e: Exception) {
+                    members.addAll(listOf("You"))
+                }
+
+                list.add(
+                    SplitGroup(
+                        id = id,
+                        name = name,
+                        description = desc,
+                        members = members,
+                        colorHex = color,
+                        iconKey = icon,
+                        createdDateMillis = created
+                    )
+                )
+            }
+        }
+        return list
+    }
+
+    fun insertSplitGroup(grp: SplitGroup): Long {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put(COL_GRP_ID, grp.id)
+            put(COL_GRP_NAME, grp.name)
+            put(COL_GRP_DESCRIPTION, grp.description)
+            val jsonArr = JSONArray()
+            grp.members.forEach { jsonArr.put(it) }
+            put(COL_GRP_MEMBERS_JSON, jsonArr.toString())
+            put(COL_GRP_COLOR, grp.colorHex)
+            put(COL_GRP_ICON, grp.iconKey)
+            put(COL_GRP_CREATED_DATE, grp.createdDateMillis)
+        }
+        return db.insert(TABLE_SPLIT_GROUPS, null, cv)
+    }
+
+    fun updateSplitGroup(grp: SplitGroup): Int {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put(COL_GRP_NAME, grp.name)
+            put(COL_GRP_DESCRIPTION, grp.description)
+            val jsonArr = JSONArray()
+            grp.members.forEach { jsonArr.put(it) }
+            put(COL_GRP_MEMBERS_JSON, jsonArr.toString())
+            put(COL_GRP_COLOR, grp.colorHex)
+            put(COL_GRP_ICON, grp.iconKey)
+        }
+        return db.update(TABLE_SPLIT_GROUPS, cv, "$COL_GRP_ID = ?", arrayOf(grp.id))
+    }
+
+    fun deleteSplitGroup(groupId: String): Int {
+        val db = writableDatabase
+        db.beginTransaction()
+        var deleted = 0
+        try {
+            db.delete(TABLE_SPLIT_BILLS, "$COL_SBILL_GROUP_ID = ?", arrayOf(groupId))
+            deleted = db.delete(TABLE_SPLIT_GROUPS, "$COL_GRP_ID = ?", arrayOf(groupId))
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        return deleted
+    }
+
+    // --- Split Bills CRUD ---
+
+    fun getAllSplitBills(): List<SplitBillItem> {
+        val list = mutableListOf<SplitBillItem>()
+        val db = readableDatabase
+        val cursor = db.query(TABLE_SPLIT_BILLS, null, null, null, null, null, "$COL_SBILL_ID DESC")
+        cursor.use {
+            while (it.moveToNext()) {
+                val id = it.getString(it.getColumnIndexOrThrow(COL_SBILL_ID))
+                val groupId = it.getString(it.getColumnIndexOrThrow(COL_SBILL_GROUP_ID))
+                val title = it.getString(it.getColumnIndexOrThrow(COL_SBILL_TITLE))
+                val totalAmount = it.getLong(it.getColumnIndexOrThrow(COL_SBILL_TOTAL_AMOUNT_PAISE))
+                val paidBy = it.getString(it.getColumnIndexOrThrow(COL_SBILL_PAID_BY))
+                val payerAcc = it.getString(it.getColumnIndexOrThrow(COL_SBILL_PAYER_ACCOUNT))
+                val modeStr = it.getString(it.getColumnIndexOrThrow(COL_SBILL_SPLIT_MODE))
+                val sharesJson = it.getString(it.getColumnIndexOrThrow(COL_SBILL_SHARES_JSON)) ?: "{}"
+                val date = it.getString(it.getColumnIndexOrThrow(COL_SBILL_DATE))
+                val cat = it.getString(it.getColumnIndexOrThrow(COL_SBILL_CATEGORY))
+                val isSettled = it.getInt(it.getColumnIndexOrThrow(COL_SBILL_IS_SETTLED)) == 1
+                val settleDate = if (it.isNull(it.getColumnIndexOrThrow(COL_SBILL_SETTLEMENT_DATE))) null
+                else it.getLong(it.getColumnIndexOrThrow(COL_SBILL_SETTLEMENT_DATE))
+
+                val shares = mutableMapOf<String, Long>()
+                try {
+                    val jsonObj = JSONObject(sharesJson)
+                    val keys = jsonObj.keys()
+                    while (keys.hasNext()) {
+                        val key = keys.next()
+                        shares[key] = jsonObj.optLong(key, 0L)
+                    }
+                } catch (e: Exception) {
+                }
+
+                list.add(
+                    SplitBillItem(
+                        id = id,
+                        groupId = groupId,
+                        title = title,
+                        totalAmountPaise = totalAmount,
+                        paidBy = paidBy,
+                        payerAccount = payerAcc,
+                        splitMode = SplitMode.fromString(modeStr),
+                        memberShares = shares,
+                        formattedDate = date,
+                        category = cat,
+                        isSettled = isSettled,
+                        settlementDateMillis = settleDate
+                    )
+                )
+            }
+        }
+        return list
+    }
+
+    fun insertSplitBill(bill: SplitBillItem): Long {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put(COL_SBILL_ID, bill.id)
+            put(COL_SBILL_GROUP_ID, bill.groupId)
+            put(COL_SBILL_TITLE, bill.title)
+            put(COL_SBILL_TOTAL_AMOUNT_PAISE, bill.totalAmountPaise)
+            put(COL_SBILL_PAID_BY, bill.paidBy)
+            put(COL_SBILL_PAYER_ACCOUNT, bill.payerAccount)
+            put(COL_SBILL_SPLIT_MODE, bill.splitMode.name)
+            val jsonObj = JSONObject()
+            bill.memberShares.forEach { (m, s) -> jsonObj.put(m, s) }
+            put(COL_SBILL_SHARES_JSON, jsonObj.toString())
+            put(COL_SBILL_DATE, bill.formattedDate)
+            put(COL_SBILL_CATEGORY, bill.category)
+            put(COL_SBILL_IS_SETTLED, if (bill.isSettled) 1 else 0)
+            if (bill.settlementDateMillis != null) {
+                put(COL_SBILL_SETTLEMENT_DATE, bill.settlementDateMillis)
+            } else {
+                putNull(COL_SBILL_SETTLEMENT_DATE)
+            }
+        }
+        return db.insert(TABLE_SPLIT_BILLS, null, cv)
+    }
+
+    fun updateSplitBill(bill: SplitBillItem): Int {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put(COL_SBILL_GROUP_ID, bill.groupId)
+            put(COL_SBILL_TITLE, bill.title)
+            put(COL_SBILL_TOTAL_AMOUNT_PAISE, bill.totalAmountPaise)
+            put(COL_SBILL_PAID_BY, bill.paidBy)
+            put(COL_SBILL_PAYER_ACCOUNT, bill.payerAccount)
+            put(COL_SBILL_SPLIT_MODE, bill.splitMode.name)
+            val jsonObj = JSONObject()
+            bill.memberShares.forEach { (m, s) -> jsonObj.put(m, s) }
+            put(COL_SBILL_SHARES_JSON, jsonObj.toString())
+            put(COL_SBILL_DATE, bill.formattedDate)
+            put(COL_SBILL_CATEGORY, bill.category)
+            put(COL_SBILL_IS_SETTLED, if (bill.isSettled) 1 else 0)
+            if (bill.settlementDateMillis != null) {
+                put(COL_SBILL_SETTLEMENT_DATE, bill.settlementDateMillis)
+            } else {
+                putNull(COL_SBILL_SETTLEMENT_DATE)
+            }
+        }
+        return db.update(TABLE_SPLIT_BILLS, cv, "$COL_SBILL_ID = ?", arrayOf(bill.id))
+    }
+
+    fun deleteSplitBill(id: String): Int {
+        val db = writableDatabase
+        return db.delete(TABLE_SPLIT_BILLS, "$COL_SBILL_ID = ?", arrayOf(id))
+    }
+
+    fun recordSettlement(
+        groupId: String,
+        fromMember: String,
+        toMember: String,
+        amountPaise: Long,
+        accountName: String
+    ): TransactionItem? {
+        val db = writableDatabase
+        val now = System.currentTimeMillis()
+        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.US)
+        val formattedDate = sdf.format(Date(now))
+
+        val billId = "sbill_settle_${UUID.randomUUID()}"
+        val settleBill = SplitBillItem(
+            id = billId,
+            groupId = groupId,
+            title = "Settlement: $fromMember paid $toMember",
+            totalAmountPaise = amountPaise,
+            paidBy = fromMember,
+            payerAccount = accountName,
+            splitMode = SplitMode.EXACT_AMOUNTS,
+            memberShares = mapOf(toMember to amountPaise),
+            formattedDate = formattedDate,
+            category = "Settlement",
+            isSettled = false,
+            settlementDateMillis = now
+        )
+
+        var txn: TransactionItem? = null
+        if (toMember == "You") {
+            txn = TransactionItem(
+                id = "txn_${UUID.randomUUID()}",
+                title = "Settlement from $fromMember",
+                category = "Settlement",
+                account = accountName,
+                amountPaise = amountPaise,
+                type = TransactionType.INCOME,
+                formattedDate = formattedDate,
+                note = "Split bill settlement received from $fromMember",
+                iconName = "CheckCircle"
+            )
+        } else if (fromMember == "You") {
+            txn = TransactionItem(
+                id = "txn_${UUID.randomUUID()}",
+                title = "Settlement to $toMember",
+                category = "Settlement",
+                account = accountName,
+                amountPaise = amountPaise,
+                type = TransactionType.EXPENSE,
+                formattedDate = formattedDate,
+                note = "Split bill settlement paid to $toMember",
+                iconName = "Payments"
+            )
+        }
+
+        db.beginTransaction()
+        try {
+            val cvBill = ContentValues().apply {
+                put(COL_SBILL_ID, settleBill.id)
+                put(COL_SBILL_GROUP_ID, settleBill.groupId)
+                put(COL_SBILL_TITLE, settleBill.title)
+                put(COL_SBILL_TOTAL_AMOUNT_PAISE, settleBill.totalAmountPaise)
+                put(COL_SBILL_PAID_BY, settleBill.paidBy)
+                put(COL_SBILL_PAYER_ACCOUNT, settleBill.payerAccount)
+                put(COL_SBILL_SPLIT_MODE, settleBill.splitMode.name)
+                val jsonObj = JSONObject()
+                jsonObj.put(toMember, amountPaise)
+                put(COL_SBILL_SHARES_JSON, jsonObj.toString())
+                put(COL_SBILL_DATE, settleBill.formattedDate)
+                put(COL_SBILL_CATEGORY, settleBill.category)
+                put(COL_SBILL_IS_SETTLED, 0)
+                put(COL_SBILL_SETTLEMENT_DATE, now)
+            }
+            db.insert(TABLE_SPLIT_BILLS, null, cvBill)
+
+            if (txn != null) {
+                val cvTxn = ContentValues().apply {
+                    put(COL_TXN_ID, txn.id)
+                    put(COL_TXN_TITLE, txn.title)
+                    put(COL_TXN_CATEGORY, txn.category)
+                    put(COL_TXN_ACCOUNT, txn.account)
+                    put(COL_TXN_AMOUNT_PAISE, txn.amountPaise)
+                    put(COL_TXN_TYPE, txn.type.name)
+                    put(COL_TXN_DATE, txn.formattedDate)
+                    put(COL_TXN_NOTE, txn.note)
+                    put(COL_TXN_ICON, txn.iconName)
+                    put(COL_TXN_TIMESTAMP, now)
+                }
+                db.insert(TABLE_TRANSACTIONS, null, cvTxn)
+            }
+
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+
+        return txn
+    }
+
     fun resetToDefaults() {
         val db = writableDatabase
         db.execSQL("DELETE FROM $TABLE_TRANSACTIONS")
@@ -794,6 +1213,8 @@ class ExpenseDatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL("DELETE FROM $TABLE_ACCOUNTS")
         db.execSQL("DELETE FROM $TABLE_CATEGORIES")
         db.execSQL("DELETE FROM $TABLE_SUBSCRIPTIONS")
+        db.execSQL("DELETE FROM $TABLE_SPLIT_GROUPS")
+        db.execSQL("DELETE FROM $TABLE_SPLIT_BILLS")
         onCreate(db)
     }
 }

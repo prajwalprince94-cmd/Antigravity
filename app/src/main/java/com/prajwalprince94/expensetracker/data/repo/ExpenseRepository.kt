@@ -5,6 +5,8 @@ import com.prajwalprince94.expensetracker.data.db.ExpenseDatabaseHelper
 import com.prajwalprince94.expensetracker.data.model.AccountItem
 import com.prajwalprince94.expensetracker.data.model.CategoryBudgetItem
 import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SplitBillItem
+import com.prajwalprince94.expensetracker.data.model.SplitGroup
 import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
@@ -39,6 +41,12 @@ class ExpenseRepository(
     private val _subscriptions = MutableStateFlow<List<SubscriptionItem>>(emptyList())
     val subscriptions: StateFlow<List<SubscriptionItem>> = _subscriptions.asStateFlow()
 
+    private val _splitGroups = MutableStateFlow<List<SplitGroup>>(emptyList())
+    val splitGroups: StateFlow<List<SplitGroup>> = _splitGroups.asStateFlow()
+
+    private val _splitBills = MutableStateFlow<List<SplitBillItem>>(emptyList())
+    val splitBills: StateFlow<List<SplitBillItem>> = _splitBills.asStateFlow()
+
     private val _budgets = MutableStateFlow<List<CategoryBudgetItem>>(emptyList())
     val budgets: StateFlow<List<CategoryBudgetItem>> = _budgets.asStateFlow()
 
@@ -62,6 +70,8 @@ class ExpenseRepository(
         val accs = dbHelper.getAllAccounts()
         val cats = dbHelper.getAllCategories()
         val subs = dbHelper.getAllSubscriptions()
+        val sGroups = dbHelper.getAllSplitGroups()
+        val sBills = dbHelper.getAllSplitBills()
 
         _transactions.value = txns
         _budgets.value = bdgts
@@ -69,6 +79,8 @@ class ExpenseRepository(
         _accounts.value = accs
         _categories.value = cats
         _subscriptions.value = subs
+        _splitGroups.value = sGroups
+        _splitBills.value = sBills
         _isLoaded.value = true
     }
 
@@ -214,6 +226,81 @@ class ExpenseRepository(
             _transactions.value = updatedTxns
             _budgets.value = dbHelper.getAllBudgets()
             _subscriptions.value = dbHelper.getAllSubscriptions()
+        }
+        txn
+    }
+
+    // --- Split Groups & Bills ---
+
+    suspend fun addSplitGroup(group: SplitGroup): Boolean = withContext(Dispatchers.IO) {
+        val rowId = dbHelper.insertSplitGroup(group)
+        val success = rowId != -1L
+        if (success) {
+            _splitGroups.value = dbHelper.getAllSplitGroups()
+        }
+        success
+    }
+
+    suspend fun updateSplitGroup(group: SplitGroup): Boolean = withContext(Dispatchers.IO) {
+        val count = dbHelper.updateSplitGroup(group)
+        val success = count > 0
+        if (success) {
+            _splitGroups.value = dbHelper.getAllSplitGroups()
+        }
+        success
+    }
+
+    suspend fun deleteSplitGroup(id: String): Boolean = withContext(Dispatchers.IO) {
+        val count = dbHelper.deleteSplitGroup(id)
+        val success = count > 0
+        if (success) {
+            _splitGroups.value = dbHelper.getAllSplitGroups()
+            _splitBills.value = dbHelper.getAllSplitBills()
+        }
+        success
+    }
+
+    suspend fun addSplitBill(bill: SplitBillItem): Boolean = withContext(Dispatchers.IO) {
+        val rowId = dbHelper.insertSplitBill(bill)
+        val success = rowId != -1L
+        if (success) {
+            _splitBills.value = dbHelper.getAllSplitBills()
+        }
+        success
+    }
+
+    suspend fun updateSplitBill(bill: SplitBillItem): Boolean = withContext(Dispatchers.IO) {
+        val count = dbHelper.updateSplitBill(bill)
+        val success = count > 0
+        if (success) {
+            _splitBills.value = dbHelper.getAllSplitBills()
+        }
+        success
+    }
+
+    suspend fun deleteSplitBill(id: String): Boolean = withContext(Dispatchers.IO) {
+        val count = dbHelper.deleteSplitBill(id)
+        val success = count > 0
+        if (success) {
+            _splitBills.value = dbHelper.getAllSplitBills()
+        }
+        success
+    }
+
+    suspend fun settleDebt(
+        groupId: String,
+        fromMember: String,
+        toMember: String,
+        amountPaise: Long,
+        accountName: String
+    ): TransactionItem? = withContext(Dispatchers.IO) {
+        val txn = dbHelper.recordSettlement(groupId, fromMember, toMember, amountPaise, accountName)
+        _splitBills.value = dbHelper.getAllSplitBills()
+        if (txn != null) {
+            val updatedTxns = dbHelper.getAllTransactions()
+            dbHelper.recalculateBudgetsSpent(updatedTxns)
+            _transactions.value = updatedTxns
+            _budgets.value = dbHelper.getAllBudgets()
         }
         txn
     }

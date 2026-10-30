@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -33,6 +34,12 @@ import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SwapHoriz
 import com.prajwalprince94.expensetracker.data.analytics.FinancialHealthAnalyzer
+import com.prajwalprince94.expensetracker.data.analytics.SplitDebtCalculator
+import com.prajwalprince94.expensetracker.data.model.AccountItem
+import com.prajwalprince94.expensetracker.data.model.CategoryItem
+import com.prajwalprince94.expensetracker.data.model.SplitBillItem
+import com.prajwalprince94.expensetracker.data.model.SplitGroup
+import com.prajwalprince94.expensetracker.data.model.SubscriptionItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -88,11 +95,14 @@ fun HomeScreen(
     transactions: List<TransactionItem>,
     accounts: List<AccountItem> = emptyList(),
     subscriptions: List<SubscriptionItem> = emptyList(),
+    splitGroups: List<SplitGroup> = emptyList(),
+    splitBills: List<SplitBillItem> = emptyList(),
     onOpenQuickAdd: (TransactionType) -> Unit,
     onNavigateToTransactions: () -> Unit,
     onNavigateToAccounts: () -> Unit = {},
     onNavigateToSubscriptions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
+    onNavigateToSplit: () -> Unit = {},
     onLogSubscriptionPayment: (String) -> Unit = {},
     onSelectTransaction: (TransactionItem) -> Unit,
     onShowMessage: (String) -> Unit,
@@ -216,6 +226,11 @@ fun HomeScreen(
                             onNavigateToAnalytics = onNavigateToAnalytics
                         )
                         CategoryDistributionCard(transactions = transactions)
+                        SplitExpenseBanner(
+                            groups = splitGroups,
+                            bills = splitBills,
+                            onNavigateToSplit = onNavigateToSplit
+                        )
                         AccountsCarousel(
                             accounts = effectiveAccounts,
                             transactions = transactions,
@@ -260,11 +275,21 @@ fun HomeScreen(
                 )
             }
 
+            // 3.8 Split Bills & Group Balances Banner
+            item {
+                SplitExpenseBanner(
+                    groups = splitGroups,
+                    bills = splitBills,
+                    onNavigateToSplit = onNavigateToSplit,
+                    modifier = Modifier.entrance(2)
+                )
+            }
+
             // 4. Interactive 7-Day Spending Bezier Curve Line Chart
             item {
                 SpendingTrendLineChart(
                     transactions = transactions,
-                    modifier = Modifier.entrance(2)
+                    modifier = Modifier.entrance(3)
                 )
             }
 
@@ -975,6 +1000,124 @@ private fun FinancialHealthBanner(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SplitExpenseBanner(
+    groups: List<SplitGroup>,
+    bills: List<SplitBillItem>,
+    onNavigateToSplit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptics = rememberAppHaptics()
+    val summary = remember(groups, bills) {
+        SplitDebtCalculator.calculateAllGroupsSummary(groups, bills)
+    }
+
+    val netPaise = summary.netBalancePaise
+    val isOwed = netPaise > 50L
+    val isOwe = netPaise < -50L
+
+    val accentColor = when {
+        isOwed -> IncomeGreen
+        isOwe -> ExpenseRed
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .bouncyClickable(scaleDown = 0.98f) {
+                haptics.confirm()
+                onNavigateToSplit()
+            }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(accentColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Group,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Split Bills & Shared Balances",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .background(accentColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "${groups.size} groups",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = accentColor,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = when {
+                        isOwed -> "You get back ₹%,.2f total".format(Locale.US, netPaise / 100.0)
+                        isOwe -> "You owe ₹%,.2f total".format(Locale.US, kotlin.math.abs(netPaise) / 100.0)
+                        else -> "All shared balances settled up"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp
+                )
+            }
+
+            Surface(
+                shape = ChipShape,
+                color = accentColor.copy(alpha = 0.15f),
+                modifier = Modifier.padding(start = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Split",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = accentColor,
                         modifier = Modifier.size(14.dp)
                     )
                 }

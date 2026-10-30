@@ -5,12 +5,14 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -72,6 +74,13 @@ sealed class Screen(
         title = "Financial Health",
         selectedIcon = Icons.Filled.BarChart,
         unselectedIcon = Icons.Outlined.BarChart
+    )
+
+    object SplitGroups : Screen(
+        route = "split_groups",
+        title = "Split Bills",
+        selectedIcon = Icons.Filled.Group,
+        unselectedIcon = Icons.Outlined.Group
     )
 
     companion object {

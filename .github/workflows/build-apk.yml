@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.8.0-split-bills.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.7.0-analytics-dashboard.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.6.0-subscriptions.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.5.0-biometric-pin-lock.apk
@@ -55,34 +56,36 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.7.0"
-          name: "Expense Tracker v2.7.0 (Financial Health & Advanced Analytics Dashboard)"
+          tag_name: "v2.8.0"
+          name: "Expense Tracker v2.8.0 (Split Expense & Group Bill Splitting Suite)"
           body: |
-            ### 📊 Expense Tracker v2.7.0 (Financial Health & Advanced Analytics Dashboard)
-            - **0-100 Gamified Financial Health Score:**
-              - Evaluates savings rate (35 pts), budget adherence (25 pts), subscription commitments (20 pts), and cashflow stability (20 pts).
-              - Dynamic tier badges (`Excellent`, `Good`, `Fair`, `Needs Attention`) with radial sweep arc gauge and animated counter.
-            - **Month-Over-Month Comparison Trends:**
-              - Comparative spending analysis between current month and prior month.
-              - Day-by-day dual line tracking and variance percentage delta pills.
-            - **Predictive Burn-Rate & Month-End Forecast:**
-              - Real-time daily burn rate tracker (`₹X/day`).
-              - End-of-month projected spending and estimated surplus/deficit vs income.
-            - **Interactive Category Distribution Donut Chart:**
-              - Native Canvas donut chart with touch-slice expansion and center data inspection.
-              - Category percentage breakdown with color tags and transaction counts.
-            - **Actionable AI-Style Insights Carousel:**
-              - Tailored recommendations on high category concentration, subscription load, over-budget items, and savings wins.
+            ### 👥 Expense Tracker v2.8.0 (Split Expense & Group Bill Splitting Suite)
+            - **Split Groups & Multi-Member Management:**
+              - Create and organize expense sharing groups for roommates, vacation trips, dining, and utilities.
+              - Custom group accent colors, semantic icons, and member avatar badge stacks.
+            - **Flexible Bill Splitting Modes:**
+              - **Equally:** Automatic equal distribution with intelligent remainder paise allocation to the payer.
+              - **Exact Amounts:** Specify exact rupee contributions per member with real-time balance validation.
+              - **Percentages:** Allocate dynamic percentage shares with live 100% total checker.
+            - **Greedy Debt Minimization Algorithm (`SplitDebtCalculator`):**
+              - Automatically eliminates circular debt across group members, condensing complex multi-way balances into minimal direct transfers.
+              - Clear breakdown of net balances: "You are owed ₹X" vs "You owe ₹Y".
+            - **One-Tap Debt Settlement & Real-Account Sync:**
+              - Record settlements directly with one tap from the debt matrix.
+              - Bi-directional sync with real accounts: Automatically records an Income or Expense transaction in your chosen bank or wallet account!
+            - **Financial Health & Analytics Dashboard (v2.7.0):**
+              - 0-100 Financial Health score, month-over-month trends, daily burn rate, and interactive donut chart.
             - **Recurring Subscriptions & Scheduled Bills (v2.6.0):**
-              - Due-date tracking, overdue badges, and one-tap payment auto-logging.
+              - Due-date tracking, auto-log payments, and recurring bill reminders.
             - **Biometric & PIN Security Suite (v2.5.0):**
-              - Fingerprint/Face biometric unlock, 4-digit PIN fallback, and Recents Privacy Shield.
+              - Fingerprint, Face biometric unlock, 4-digit PIN, and Recents Privacy Shield.
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.7.0-analytics-dashboard.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.8.0-split-bills.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v2.8.0-split-bills.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.7.0-analytics-dashboard.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.6.0-subscriptions.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.5.0-biometric-pin-lock.apk
