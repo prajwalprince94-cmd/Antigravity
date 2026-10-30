@@ -14,13 +14,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,10 +36,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
 import com.prajwalprince94.expensetracker.ui.theme.CardShape
 import com.prajwalprince94.expensetracker.ui.theme.PillShape
 
@@ -177,16 +189,16 @@ fun Modifier.glow(color: Color, radius: Dp = 50.dp, alpha: Float = 0.35f): Modif
         )
     }
 
-class AppHaptics(private val haptic: androidx.compose.ui.hapticfeedback.HapticFeedback) {
-    fun light() = haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-    fun selection() = haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-    fun confirm() = haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+class AppHaptics(private val haptic: HapticFeedback) {
+    fun light() = haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    fun selection() = haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    fun confirm() = haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 }
 
 @Composable
 fun rememberAppHaptics(): AppHaptics {
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-    return androidx.compose.runtime.remember(haptic) { AppHaptics(haptic) }
+    val haptic = LocalHapticFeedback.current
+    return remember(haptic) { AppHaptics(haptic) }
 }
 
 /**
@@ -195,7 +207,7 @@ fun rememberAppHaptics(): AppHaptics {
  */
 @Composable
 fun EmptyStateView(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     actionLabel: String? = null,
@@ -212,11 +224,11 @@ fun EmptyStateView(
         Box(
             modifier = Modifier
                 .size(72.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
+                .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center
         ) {
-            androidx.compose.material3.Icon(
+            Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
@@ -224,7 +236,7 @@ fun EmptyStateView(
             )
         }
 
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = title,
@@ -233,21 +245,21 @@ fun EmptyStateView(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         if (actionLabel != null && onAction != null) {
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(20.dp))
-            androidx.compose.material3.Surface(
+            Spacer(modifier = Modifier.height(20.dp))
+            Surface(
                 modifier = Modifier.bouncyClickable(scaleDown = 0.94f, onClick = onAction),
-                shape = com.prajwalprince94.expensetracker.ui.theme.ButtonShape,
+                shape = ButtonShape,
                 color = MaterialTheme.colorScheme.primary
             ) {
                 Text(
