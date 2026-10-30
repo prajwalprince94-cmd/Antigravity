@@ -10,6 +10,8 @@ import androidx.glance.ButtonDefaults
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -74,21 +76,17 @@ class ExpenseGlanceWidget : GlanceAppWidget() {
             }
         }
 
-        val launchAppIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val quickAddIntent = Intent(context, MainActivity::class.java).apply {
-            action = MainActivity.ACTION_QUICK_ADD
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val scanIntent = Intent(context, MainActivity::class.java).apply {
-            action = MainActivity.ACTION_SCAN_RECEIPT
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val smsSyncIntent = Intent(context, MainActivity::class.java).apply {
-            action = MainActivity.ACTION_SMS_SYNC
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val widgetActionKey = ActionParameters.Key<String>("widgetAction")
+        val launchAppAction = actionStartActivity<MainActivity>()
+        val quickAddAction = actionStartActivity<MainActivity>(
+            actionParametersOf(widgetActionKey to MainActivity.ACTION_QUICK_ADD)
+        )
+        val scanAction = actionStartActivity<MainActivity>(
+            actionParametersOf(widgetActionKey to MainActivity.ACTION_SCAN_RECEIPT)
+        )
+        val smsSyncAction = actionStartActivity<MainActivity>(
+            actionParametersOf(widgetActionKey to MainActivity.ACTION_SMS_SYNC)
+        )
 
         provideContent {
             GlanceTheme {
@@ -110,7 +108,7 @@ class ExpenseGlanceWidget : GlanceAppWidget() {
                         .background(backgroundColor)
                         .cornerRadius(22.dp)
                         .padding(14.dp)
-                        .clickable(actionStartActivity(launchAppIntent))
+                        .clickable(launchAppAction)
                 ) {
                     Column(
                         modifier = GlanceModifier.fillMaxSize(),
@@ -192,7 +190,7 @@ class ExpenseGlanceWidget : GlanceAppWidget() {
                         ) {
                             Button(
                                 text = "+ Expense",
-                                onClick = actionStartActivity(quickAddIntent),
+                                onClick = quickAddAction,
                                 colors = ButtonDefaults.buttonColors(
                                     backgroundColor = glanceColor(expenseColor),
                                     contentColor = glanceColor(Color.White)
@@ -204,7 +202,7 @@ class ExpenseGlanceWidget : GlanceAppWidget() {
 
                             Button(
                                 text = "Scan OCR",
-                                onClick = actionStartActivity(scanIntent),
+                                onClick = scanAction,
                                 colors = ButtonDefaults.buttonColors(
                                     backgroundColor = glanceColor(cardSurfaceColor),
                                     contentColor = glanceColor(textPrimary)
@@ -216,7 +214,7 @@ class ExpenseGlanceWidget : GlanceAppWidget() {
 
                             Button(
                                 text = "SMS Sync",
-                                onClick = actionStartActivity(smsSyncIntent),
+                                onClick = smsSyncAction,
                                 colors = ButtonDefaults.buttonColors(
                                     backgroundColor = glanceColor(primaryColor),
                                     contentColor = glanceColor(Color.White)

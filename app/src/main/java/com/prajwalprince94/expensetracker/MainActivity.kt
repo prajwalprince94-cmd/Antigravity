@@ -77,15 +77,20 @@ import kotlinx.coroutines.launch
 class MainActivity : FragmentActivity() {
     private var incomingAction by mutableStateOf<String?>(null)
 
+    private fun extractIncomingAction(intent: Intent?): String? {
+        if (intent == null) return null
+        return intent.action ?: intent.getStringExtra("widgetAction")
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        incomingAction = intent.action
+        incomingAction = extractIncomingAction(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        incomingAction = intent?.action
+        incomingAction = extractIncomingAction(intent)
         ExpenseGraph.ensureInit(this)
         enableEdgeToEdge()
 
