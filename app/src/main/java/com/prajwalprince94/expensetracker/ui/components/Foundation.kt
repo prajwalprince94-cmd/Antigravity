@@ -193,6 +193,7 @@ class AppHaptics(private val haptic: HapticFeedback) {
     fun light() = haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     fun selection() = haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     fun confirm() = haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    fun error() = haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 }
 
 @Composable
