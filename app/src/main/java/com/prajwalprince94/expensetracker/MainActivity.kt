@@ -238,6 +238,9 @@ fun MainApp(
                         transactions = transactions,
                         onSelectTransaction = { txn ->
                             selectedTransactionForDetail = txn
+                        },
+                        onShowMessage = { msg ->
+                            scope.launch { snackbarHostState.showSnackbar(msg) }
                         }
                     )
                 }
@@ -255,6 +258,7 @@ fun MainApp(
                 composable(Screen.Settings.route) {
                     SettingsScreen(
                         preferences = preferences,
+                        transactions = transactions,
                         onUpdatePreferences = onUpdatePreferences,
                         onResetDatabase = onResetDatabase,
                         onClearTransactions = onClearTransactions,

@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Icon
@@ -41,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalContext
+import com.prajwalprince94.expensetracker.data.export.CsvExporter
 import com.prajwalprince94.expensetracker.ui.components.EmptyStateView
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
 import com.prajwalprince94.expensetracker.ui.components.StatusPill
@@ -48,6 +51,7 @@ import com.prajwalprince94.expensetracker.ui.components.bob
 import com.prajwalprince94.expensetracker.ui.components.bouncyClickable
 import com.prajwalprince94.expensetracker.ui.components.entrance
 import com.prajwalprince94.expensetracker.ui.components.fadingEdges
+import com.prajwalprince94.expensetracker.ui.components.rememberAppHaptics
 import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.model.TransactionType
 import com.prajwalprince94.expensetracker.ui.theme.CardShape
@@ -61,8 +65,11 @@ import com.prajwalprince94.expensetracker.ui.theme.getFinancialContainerColor
 fun TransactionsScreen(
     transactions: List<TransactionItem>,
     onSelectTransaction: (TransactionItem) -> Unit,
+    onShowMessage: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val haptics = rememberAppHaptics()
     val isDark = isSystemInDarkTheme()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
@@ -93,13 +100,59 @@ fun TransactionsScreen(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Transactions",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.entrance(0)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .entrance(0),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Transactions",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            // Quick CSV Export Button
+            Surface(
+                onClick = {
+                    haptics.confirm()
+                    if (filteredList.isEmpty()) {
+                        onShowMessage?.invoke("No transactions to export for current filter")
+                    } else {
+                        val result = CsvExporter.exportAndShare(context, filteredList)
+                        result.onSuccess {
+                            onShowMessage?.invoke("Exporting ${filteredList.size} transactions to CSV")
+                        }.onFailure { err ->
+                            onShowMessage?.invoke("Export failed: ${err.message}")
+                        }
+                    }
+                },
+                shape = ChipShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.bouncyClickable()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FileDownload,
+                        contentDescription = "Export CSV",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Export",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

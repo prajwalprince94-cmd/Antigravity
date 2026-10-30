@@ -41,6 +41,7 @@ jobs:
 
       - name: Prepare APK for Release
         run: |
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.3.0-csv-export.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.2.0-appllama-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.1.0-masterpiece.apk
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk
@@ -51,25 +52,28 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: "v2.2.0"
-          name: "Expense Tracker v2.2.0 (Appllama Mobile Design System & Skeletons)"
+          tag_name: "v2.3.0"
+          name: "Expense Tracker v2.3.0 (CSV Data Export & Share Sheet)"
           body: |
-            ### 📱 Expense Tracker v2.2.0 (Appllama Native Benchmark Edition)
-            - **Appllama Design System Primitives:**
-              - *Continuous Squircle Shape Scale:* Strict shape locking with `BadgeShape (8dp)`, `ChipShape (12dp)`, `InputShape (16dp)`, `ButtonShape (18dp)`, `CardShape (20dp)`, `LargeCardShape (24dp)`, and `SheetShape (28dp top)`.
-              - *Tactile Haptic Press Feedback:* Physical press-in haptic ticks on keypad keys, bottom navigation tabs, budget scrubber sliders, and action buttons via `rememberAppHaptics()` and `bouncyClickable(hapticFeedback = true)`.
-              - *Zero-Slop Composed Empty States:* Polished, expressive empty states via `EmptyStateView` with native iconography and immediate primary call-to-action buttons for Home, Transactions, and Budgets.
-              - *Layout-Preserving Shimmer Skeletons:* Added `HomeScreenSkeleton`, `TransactionsScreenSkeleton`, and `BudgetsScreenSkeleton` matching layout geometry with zero layout shifts or jank.
-              - *Tabular Numerals:* Enforced `tabular-nums` formatting across rupee tickers, transaction amounts, and budget progress dials to eliminate horizontal jitter.
-            - **In-App Updater Multi-Hop Redirects & Storage:**
-              - Multi-hop HTTP 302/307 redirect engine resolves Azure CDN releases seamlessly.
-              - SELinux compliant external download storage enables one-tap installation on modern Android versions.
+            ### 📊 Expense Tracker v2.3.0 (CSV Statement Export & Share Sheet)
+            - **RFC 4180 Compliant CSV Export Engine:**
+              - Fast, memory-efficient streaming CSV generator escaping quotes, commas, and newlines according to standard specifications.
+              - Exports full transaction attributes: `Transaction ID`, `Title`, `Category`, `Type` (Expense/Income/Transfer), `Account`, `Amount (INR)`, `Date & Time`, and `Remark / Note`.
+            - **Native Android Share Sheet Integration:**
+              - Generates timestamped `.csv` file in private cache storage (`context.cacheDir/exports/`) with secure FileProvider URI grants (`FLAG_GRANT_READ_URI_PERMISSION`).
+              - Triggers native Android Chooser (`Intent.createChooser`) allowing direct sharing to WhatsApp, Google Drive, Gmail, Slack, Telegram, or any local file manager.
+            - **Seamless Multi-Touchpoint Access:**
+              - **Transactions Screen Quick Export:** Quick-tap "Export" pill button right next to the screen header automatically exports active search & category filtered results.
+              - **Settings Screen Offline Vault Export:** "Export Statement (CSV)" row in the Offline Database Vault section shares the complete database statement with transaction counts and error protection.
+            - **Appllama Design System & Skeletons:**
+              - Squircle scale, tactile haptic feedback, shimmering layout-matched skeletons, and zero-slop empty states.
 
             #### 📥 Download & Install:
-            Download **`ExpenseTracker-v2.2.0-appllama-masterpiece.apk`** below under Assets.
+            Download **`ExpenseTracker-v2.3.0-csv-export.apk`** below under Assets.
           draft: false
           prerelease: false
           files: |
+            app/build/outputs/apk/debug/ExpenseTracker-v2.3.0-csv-export.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.2.0-appllama-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.1.0-masterpiece.apk
             app/build/outputs/apk/debug/ExpenseTracker-v2.0-stride-masterpiece.apk

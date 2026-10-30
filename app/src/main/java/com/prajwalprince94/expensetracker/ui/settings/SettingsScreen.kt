@@ -53,7 +53,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.prajwalprince94.expensetracker.BuildConfig
+import com.prajwalprince94.expensetracker.data.export.CsvExporter
 import com.prajwalprince94.expensetracker.data.update.AppUpdateInfo
 import com.prajwalprince94.expensetracker.data.update.AppUpdateManager
 import com.prajwalprince94.expensetracker.ui.components.GlassCard
@@ -68,6 +70,7 @@ import com.prajwalprince94.expensetracker.ui.model.AppPalette
 import com.prajwalprince94.expensetracker.ui.model.AppPreferences
 import com.prajwalprince94.expensetracker.ui.model.ColorStyle
 import com.prajwalprince94.expensetracker.ui.model.ThemeMode
+import com.prajwalprince94.expensetracker.ui.model.TransactionItem
 import com.prajwalprince94.expensetracker.ui.theme.ButtonShape
 import com.prajwalprince94.expensetracker.ui.theme.CardShape
 import com.prajwalprince94.expensetracker.ui.theme.ChipShape
@@ -79,12 +82,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     preferences: AppPreferences,
+    transactions: List<TransactionItem> = emptyList(),
     onUpdatePreferences: (AppPreferences) -> Unit,
     onResetDatabase: () -> Unit,
     onClearTransactions: () -> Unit,
     onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val haptics = rememberAppHaptics()
     var isAppLockEnabled by remember { mutableStateOf(false) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
@@ -404,6 +409,29 @@ fun SettingsScreen(
                 contentPadding = 12.dp
             ) {
                 Column {
+                    SettingActionRow(
+                        icon = Icons.Default.FileDownload,
+                        title = "Export Statement (CSV)",
+                        subtitle = if (transactions.isNotEmpty()) {
+                            "Share statement containing ${transactions.size} transactions"
+                        } else {
+                            "No transactions in database to export"
+                        },
+                        onClick = {
+                            if (transactions.isEmpty()) {
+                                onShowMessage("No transactions found to export.")
+                            } else {
+                                haptics.confirm()
+                                val result = CsvExporter.exportAndShare(context, transactions)
+                                result.onSuccess {
+                                    onShowMessage("CSV statement ready! Choose an app to share.")
+                                }.onFailure { err ->
+                                    onShowMessage("Export failed: ${err.message}")
+                                }
+                            }
+                        }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                     SettingActionRow(
                         icon = Icons.Default.RestartAlt,
                         title = "Reset Sample Data",
